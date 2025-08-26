@@ -1,16 +1,23 @@
-import express, { type Request, type Response } from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT: number | string = process.env.PORT || 3000;
 
-// Middleware
+// Middleware example with types
 app.use(express.json());
-
-
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
 app.get("/", (req: Request, res: Response) => {
-  res.send("🚀 Express + TypeScript server is running!");
+  res.send("Hello from Express + TypeScript + NodeNext with types!");
 });
+// Async initialization using top-level await
+const initialize = async (): Promise<void> => {
+  // Simulate async setup, e.g., DB connection
+  await new Promise<void>((resolve) => setTimeout(resolve, 100));
+  console.log("Async initialization completed");
+};
+await initialize();
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+export default app;

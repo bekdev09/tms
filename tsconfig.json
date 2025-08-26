@@ -7,11 +7,12 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "commonjs",
-    "target": "ES2019",
+    "module": "NodeNext",
+    "target": "esnext",
+    "moduleResolution": "NodeNext",
     // For nodejs:
     // "lib": ["esnext"],
-    "types": ["node"],
+    // "types": ["node"],
     // and npm install -D @types/node
 
     // Other Outputs
@@ -34,7 +35,7 @@
     // Recommended Options
     "strict": true,
     // "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
+    // "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
