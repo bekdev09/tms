@@ -4,26 +4,22 @@
     // File Layout
     "rootDir": "./src",
     "outDir": "./dist",
-
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "NodeNext",
-    "target": "esnext",
+    "target": "ES2022",
     "moduleResolution": "NodeNext",
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
     // and npm install -D @types/node
-
     // Other Outputs
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-
     // Style Options
     // "noImplicitReturns": true,
     // "noImplicitOverride": true,
@@ -31,6 +27,11 @@
     // "noUnusedParameters": true,
     // "noFallthroughCasesInSwitch": true,
     // "noPropertyAccessFromIndexSignature": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": true,
 
     // Recommended Options
     "strict": true,
@@ -41,6 +42,16 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
-  "include": ["src", "app.ts", "server.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src",
+    "app.ts",
+    "server.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "ts-node": {
+    "esm": true // 👈 important
+  }
 }

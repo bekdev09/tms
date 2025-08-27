@@ -13,11 +13,11 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello from Express + TypeScript + NodeNext with types!");
 });
 // Async initialization using top-level await
-const initialize = async (): Promise<void> => {
-  // Simulate async setup, e.g., DB connection
-  await new Promise<void>((resolve) => setTimeout(resolve, 100));
-  console.log("Async initialization completed");
-};
-await initialize();
+// const initialize = async (): Promise<void> => {
+//   // Simulate async setup, e.g., DB connection
+//   await new Promise<void>((resolve) => setTimeout(resolve, 100));
+//   console.log("Async initialization completed");
+// };
+// await initialize();
 
 export default app;
