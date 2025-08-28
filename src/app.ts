@@ -1,23 +1,22 @@
 import express, { type NextFunction, type Request, type Response } from "express";
+import cors from "cors";
+import morgan from "morgan"
+import helmet from "helmet";
 
+// export function createServer() {
 const app = express();
-const PORT: number | string = process.env.PORT || 3000;
 
-// Middleware example with types
+app.use(cors())
+app.use(helmet())
 app.use(express.json());
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
-});
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello from Express + TypeScript + NodeNext with types!");
-});
-// Async initialization using top-level await
-// const initialize = async (): Promise<void> => {
-//   // Simulate async setup, e.g., DB connection
-//   await new Promise<void>((resolve) => setTimeout(resolve, 100));
-//   console.log("Async initialization completed");
-// };
-// await initialize();
+app.use(morgan('dev'))
 
-export default app;
+app.get("/health", (req: Request, res: Response) => res.json({ ok: true, service: "Task & Work Order API" }))
+
+app.use("/auth", (req: Request, res: Response) => res.json({ msg: "auth" }))
+app.use("/users", (req: Request, res: Response) => res.json({ msg: "users" }))
+app.use("/tasks", (req: Request, res: Response) => res.json({ msg: "tasks" }))
+app.use("/notifications", (req: Request, res: Response) => res.json({ msg: "notifications" }))
+
+export default app
+// }
