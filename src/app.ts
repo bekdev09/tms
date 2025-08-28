@@ -3,7 +3,6 @@ import cors from "cors";
 import morgan from "morgan"
 import helmet from "helmet";
 
-// export function createServer() {
 const app = express();
 
 app.use(cors())
@@ -19,4 +18,3 @@ app.use("/tasks", (req: Request, res: Response) => res.json({ msg: "tasks" }))
 app.use("/notifications", (req: Request, res: Response) => res.json({ msg: "notifications" }))
 
 export default app
-// }
