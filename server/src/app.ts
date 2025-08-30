@@ -1,17 +1,11 @@
-import express, { type NextFunction, type Request, type Response } from "express";
-import cors from "cors";
-import morgan from "morgan"
-import helmet from "helmet";
-import rateLimit from "express-rate-limit";
+import express, { Application, type NextFunction, type Request, type Response } from "express";
 
-const app = express();
+import { setupSecurity } from "./middlewares/security.ts";
 
-app.use(cors())
-app.use(helmet())
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+const app: Application = express();
 
-app.use(express.json());
-app.use(morgan('dev'))
+setupSecurity(app);
+
 
 app.get("/health", (req: Request, res: Response) => res.json({ ok: true, service: "Task & Work Order API" }))
 
