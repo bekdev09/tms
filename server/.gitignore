@@ -1,0 +1,19 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build
+dist/
+build/
+
+# Env
+.env
+.env.*   # e.g. .env.local, .env.production
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
