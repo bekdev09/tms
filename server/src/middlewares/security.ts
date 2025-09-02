@@ -3,11 +3,10 @@ import express from 'express'
 import helmet from "helmet";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
-import hpp from "hpp";
-// @ts-expect-error no types available
-import xss from "xss-clean";
+// import hpp from "hpp";
+// import xss from "xss-clean";
 import morgan from "morgan"
-import compression from "compression";
+// import compression from "compression";
 
 export function setupSecurity(app: Application) {
     app.disable("x-powered-by");
@@ -26,13 +25,13 @@ export function setupSecurity(app: Application) {
         legacyHeaders: false,
     }));
 
-    app.use(hpp());
-    app.use(xss());
+    // app.use(hpp());
+    // app.use(xss());
 
     app.use(express.json());
     app.use(morgan('dev'))
-    app.use(compression({
-        level: 6, // Compression level (0–9, default 6 is good balance)
-        threshold: 1024, // Only compress responses > 1KB
-    }));
+    // app.use(compression({
+    //     level: 6, // Compression level (0–9, default 6 is good balance)
+    //     threshold: 1024, // Only compress responses > 1KB
+    // }));
 }
