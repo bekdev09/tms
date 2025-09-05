@@ -9,5 +9,4 @@ setupSecurity(app);
 
 app.use("/api/v1", mainRouter);
 
-
 export default app

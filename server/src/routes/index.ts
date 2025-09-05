@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
-
-const router = Router()
+import authRoutes from "../modules/auth/auth.routes.ts";
+const router = Router();
 
 router.get("/health", (_req: Request, res: Response) => {
   res.status(200).json({
@@ -11,7 +11,7 @@ router.get("/health", (_req: Request, res: Response) => {
   });
 });
 
-router.use("/auth", (_req: Request, res: Response) => res.json({ msg: "auth" }))
+router.use("/auth", authRoutes)
 router.use("/users", (_req: Request, res: Response) => res.json({ msg: "users" }))
 router.use("/tasks", (_req: Request, res: Response) => res.json({ msg: "tasks" }))
 router.use("/notifications", (_req: Request, res: Response) => res.json({ msg: "notifications" }))
