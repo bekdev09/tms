@@ -2,6 +2,22 @@ import { prisma } from "../../prisma/client.ts";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+export async function register(data: any) {
+    const hash = await bcrypt.hash(data.password, 10);
+    return prisma.user.create({
+        data: {
+            username: data.username,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            patronymic: data.patronymic,
+            email: data.email,
+            phone: data.phone,
+            passwordHash: hash,
+            role: data.role,
+        },
+    });
+}
+
 export async function login(email: string, password: string) {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw new Error("User not found");
@@ -22,20 +38,4 @@ export async function login(email: string, password: string) {
     );
 
     return { accessToken, refreshToken, user };
-}
-
-export async function register(data: any) {
-    const hash = await bcrypt.hash(data.password, 10);
-    return prisma.user.create({
-        data: {
-            username: data.username,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            patronymic: data.patronymic,
-            email: data.email,
-            phone: data.phone,
-            passwordHash: hash,
-            role: data.role,
-        },
-    });
 }
