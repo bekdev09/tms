@@ -2,9 +2,13 @@ import { Request, Router, Response } from "express";
 import * as authController from "./auth.controller.ts";
 import { loginSchema, registerSchema } from "./auth.schemas.ts";
 import { validate } from "../../middlewares/validateRequest.ts";
+import { authenticate } from "../../middlewares/auth.middleware.ts";
 // import { authenticate } from "../../middlewares/auth.middleware.ts";
 const router = Router();
 
+router.get("/me", authenticate(), (req, res) => {
+    res.json({ user: req.user });
+});
 router.post("/register", /* authenticate(["ADMIN"]),*/ validate(registerSchema), authController.register)
 // router.post("/login", validate(loginSchema), authController.login);
 // router.post("/refresh", authController.refreshToken);
