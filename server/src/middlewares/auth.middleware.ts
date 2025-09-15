@@ -1,11 +1,12 @@
 // src/middleware/authenticate.ts
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { AuthPayload } from "../types/auth.js";
+// import { AuthPayload } from "";
+import { AuthPayload, AuthPayloadSchema } from "../modules/auth/auth.schemas.ts";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret"; // move to env
-
-export function authenticate(requiredRoles?: string[]) {
+type Role = "ADMIN" | "MANAGER" | "EMPLOYEE";
+export function authenticate(requiredRoles?: Role[]) {
     return (req: Request, res: Response, next: NextFunction) => {
         try {
             const authHeader = req.headers.authorization;
@@ -17,14 +18,18 @@ export function authenticate(requiredRoles?: string[]) {
                 return res.status(401).json({ message: "Token missing" });
             }
             const decoded = jwt.verify(token, JWT_SECRET) as unknown as AuthPayload;
-
-            // attach decoded payload
-            req.user = decoded;
+            const parsed = AuthPayloadSchema.safeParse(decoded);
+            if (!parsed.success) {
+                return res.status(401).json({ message: "Invalid token payload" });
+            }
+            // attach decoded and parsed payload
+            req.user = parsed.data;
 
             // if roles are required, check them
-            if (requiredRoles && requiredRoles.length > 0) {
-                const userRole = (decoded as any).role;
-                if (!requiredRoles.includes(userRole)) {
+            if (requiredRoles?.length) {
+                const userRoles = parsed.data.roles;
+                const hasAccess = userRoles.some(role => userRoles.includes(role));
+                if (!hasAccess) {
                     return res.status(403).json({ message: "Forbidden: insufficient role" });
                 }
             }

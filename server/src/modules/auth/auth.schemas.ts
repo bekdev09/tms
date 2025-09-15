@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+export const AuthPayloadSchema = z.object({
+    id: z.string(),
+    email: z.email(),
+    roles: z.array(z.enum(["ADMIN", "MANAGER", "EMPLOYEE"])),
+    iat: z.number().optional(),
+    exp: z.number().optional(),
+});
+
+export type AuthPayload = z.infer<typeof AuthPayloadSchema>;
+
 export const registerSchema = z.object({
     username: z.string().min(3),
     firstname: z.string().min(2),
