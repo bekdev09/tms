@@ -29,10 +29,8 @@
     // "noPropertyAccessFromIndexSignature": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-
     "allowImportingTsExtensions": true,
     "emitDeclarationOnly": true,
-
     // Recommended Options
     "strict": true,
     // "jsx": "react-jsx",
@@ -52,6 +50,6 @@
     "dist"
   ],
   "ts-node": {
-    "esm": true // 👈 important
+    "esm": true
   }
 }

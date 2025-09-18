@@ -13,11 +13,11 @@ export function errorHandlerMiddleware(
   res: Response,
   _next: NextFunction
 ) {
-  console.error("🔥 Error:", err);
+  // console.error("🔥 Error:", err);
 
   let customError: CustomError = {
-    statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
-    msg: "Something went wrong, please try again later",
+    statusCode: err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
+    msg: err.message || "Something went wrong, please try again later",
   };
 
   if (err instanceof Prisma.PrismaClientValidationError) {

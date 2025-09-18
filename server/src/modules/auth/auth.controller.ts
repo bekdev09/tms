@@ -6,8 +6,8 @@ export async function register(req: Request, res: Response) {
     res.status(201).json(user);
 }
 
-// export async function login(req: Request, res: Response) {
-//     const { email, password } = req.body;
-//     const tokens = await authService.login(email, password);
-//     res.json(tokens);
-// }
+export async function login(req: Request, res: Response) {
+    const { email, password } = req.body;
+    const tokens = await authService.login(email, password);
+    res.json(tokens);
+}
