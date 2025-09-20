@@ -6,7 +6,8 @@ import { AuthPayload, RegisterInput } from "./auth.schemas.ts";
 
 export async function register(data: RegisterInput) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
-    return authDao.createUser({ ...data, password: hashedPassword });
+    const createdUser = authDao.createUser({ ...data, password: hashedPassword });
+    return createdUser;
 }
 
 export async function login(email: string, password: string): Promise<AuthPayload> {
