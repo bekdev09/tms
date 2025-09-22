@@ -3,7 +3,7 @@ import { prisma } from "../../prisma/client.ts";
 import { RegisterInput } from "./auth.schemas.ts";
 import { User } from "@prisma/client"
 
-export async function createUser(data: RegisterInput): Promise<User> {
+export async function createUser(data: RegisterInput): Promise<User | null> {
     return prisma.user.create({ data });
 }
 
