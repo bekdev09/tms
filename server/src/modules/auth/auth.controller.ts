@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as authService from "./auth.service.ts";
+import { StatusCodes } from "http-status-codes";
 
 export async function register(req: Request, res: Response) {
     const user = await authService.register(req.body);
@@ -9,7 +10,5 @@ export async function register(req: Request, res: Response) {
 export async function login(req: Request, res: Response) {
     const { email, password } = req.body;
     const tokens = await authService.login(email, password);
-    console.log(tokens);
-
-    res.json(tokens);
+    res.status(StatusCodes.OK).json(tokens);
 }

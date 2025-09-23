@@ -34,13 +34,9 @@ export async function login(email: string, password: string): Promise<LoginRespo
     //     process.env.JWT_SECRET!,
     //     { expiresIn: "7d" }
     // );
-    console.log({ user: userDto, token: accessToken });
-
 
     const result = loginResponseDtoSchema.safeParse({ user: userDto, token: accessToken })
     if (!result.success) {
-        console.log(result);
-
         throw new Error("Invalid response format");
     }
     return result.data;
