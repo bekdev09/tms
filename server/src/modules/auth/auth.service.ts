@@ -4,6 +4,8 @@ import * as authDao from "./auth.dao.ts";
 // import { AuthTokens } from "./auth.types";
 import { RegisterInput } from "./auth.schemas.ts";
 import { LoginResponse, loginResponseDtoSchema, UserDto } from "./auth.dto.ts";
+import { env } from "../../configs/env.ts";
+import { createJWT } from "../../utils/jwt.ts";
 
 export async function register(data: RegisterInput) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -23,9 +25,12 @@ export async function login(email: string, password: string): Promise<LoginRespo
         email: user.email,
         role: user.role
     }
+
+    const t1 = createJWT({ payload: { id: "cmfv6gv740000vyt4i8311ozf", role: "ADMIN" } })
+
     const accessToken = jwt.sign(
         { userId: user.id, role: user.role },
-        process.env.JWT_SECRET!,
+        env.JWT_SECRET!,
         { expiresIn: "15m" }
     );
 

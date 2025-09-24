@@ -1,12 +1,12 @@
 // src/middleware/authenticate.ts
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-// import { AuthPayload } from "";
 import { AuthPayload, AuthPayloadSchema } from "../modules/auth/auth.schemas.ts";
 import { UnauthenticatedError } from "../errors/unauthenticated.ts";
 import { UnauthorizedError } from "../errors/unauthorized.ts";
+import { env } from "../configs/env.ts";
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret"; // move to env
+const JWT_SECRET = env.JWT_SECRET
 type Role = "ADMIN" | "MANAGER" | "EMPLOYEE";
 export function authenticate(requiredRoles?: Role[]) {
   return (req: Request, _res: Response, next: NextFunction) => {

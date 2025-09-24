@@ -4,9 +4,10 @@ import z from "zod";
 
 const EnvSchema = z.object({
   PORT: z.coerce.number().positive().default(3000),
-  JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters."),
+  JWT_SECRET: z.string().min(32, "JWT secret key must be at least 32 characters."),
   DATABASE_URL: z.url({ message: "DATABASE_URL must be a valid URL (e.g. postgres://...)" }),
   NODE_ENV: z.string().default("development"),
+  JWT_LIFETIME: z.string().optional()
   // EMAIL_FROM: z.string(),
   // SMTP_HOST: z.string(),
   // SMTP_USER: z.string(),

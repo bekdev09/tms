@@ -2,10 +2,9 @@ import { z } from "zod";
 
 export const AuthPayloadSchema = z.object({
     id: z.cuid2(),
-    email: z.email(),
-    roles: z.array(z.enum(["ADMIN", "MANAGER", "EMPLOYEE"])),
-    iat: z.number().optional(),
-    exp: z.number().optional(),
+    role: z.enum(["ADMIN", "MANAGER", "EMPLOYEE"]),
+    // iat: z.number().optional(),
+    // exp: z.number().optional(),
 });
 
 export type AuthPayload = z.infer<typeof AuthPayloadSchema>;
