@@ -3,11 +3,16 @@ import { z } from "zod";
 export const AuthPayloadSchema = z.object({
     id: z.cuid2(),
     role: z.enum(["ADMIN", "MANAGER", "EMPLOYEE"]),
-    // iat: z.number().optional(),
-    // exp: z.number().optional(),
-});
+}).strict();
 
 export type AuthPayload = z.infer<typeof AuthPayloadSchema>;
+// ✅ Decoded payload (includes JWT metadata)
+export const DecodedAuthPayloadSchema = AuthPayloadSchema.extend({
+    iat: z.number(),
+    exp: z.number(),
+}).strict();
+
+export type DecodedAuthPayload = z.infer<typeof DecodedAuthPayloadSchema>;
 
 export const registerSchema = z.object({
     username: z.string().min(3),

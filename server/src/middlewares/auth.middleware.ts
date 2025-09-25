@@ -5,8 +5,8 @@ import { AuthPayload, AuthPayloadSchema } from "../modules/auth/auth.schemas.ts"
 import { UnauthenticatedError } from "../errors/unauthenticated.ts";
 import { UnauthorizedError } from "../errors/unauthorized.ts";
 import { env } from "../configs/env.ts";
+import { verifyJWT } from "../utils/jwt.ts";
 
-const JWT_SECRET = env.JWT_SECRET
 type Role = "ADMIN" | "MANAGER" | "EMPLOYEE";
 export function authenticate(requiredRoles?: Role[]) {
   return (req: Request, _res: Response, next: NextFunction) => {
@@ -19,25 +19,23 @@ export function authenticate(requiredRoles?: Role[]) {
       if (!token) {
         throw new UnauthenticatedError("Invalid credentials")
       }
-      const decoded = jwt.verify(token, JWT_SECRET) as unknown as AuthPayload;
-      const parsed = AuthPayloadSchema.safeParse(decoded);
-      if (!parsed.success) {
-        throw new UnauthenticatedError("Invalid credentials")
+      const decoded = verifyJWT({ token, isAccessToken: true });
+      if (!decoded) {
+        throw new UnauthenticatedError("Unauthorized")
       }
       // attach decoded and parsed payload
-      req.user = parsed.data;
+      req.user = decoded;
 
-      // if roles are required, check them
       if (requiredRoles?.length) {
-        const userRoles = parsed.data.roles;
-        const hasAccess = userRoles.some(role => userRoles.includes(role));
+        const userRoles = decoded.role;
+        const hasAccess = requiredRoles.some(role => userRoles.includes(role));
         if (!hasAccess) {
           throw new UnauthorizedError("Forbidden: insufficient role")
         }
       }
       next();
     } catch (err) {
-      throw new UnauthenticatedError("Invalid credentials")
+      next(err)
     }
   };
 }

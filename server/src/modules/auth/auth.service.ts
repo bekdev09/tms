@@ -26,21 +26,11 @@ export async function login(email: string, password: string): Promise<LoginRespo
         role: user.role
     }
 
-    const t1 = createJWT({ payload: { id: "cmfv6gv740000vyt4i8311ozf", role: "ADMIN" } })
+    const accessToken = createJWT({ payload: { id: user.id, role: user.role }, isAccessToken: true })
+    const refreshToken = createJWT({ payload: { id: user.id, role: user.role }, isAccessToken: false })
 
-    const accessToken = jwt.sign(
-        { userId: user.id, role: user.role },
-        env.JWT_SECRET!,
-        { expiresIn: "15m" }
-    );
+    const result = loginResponseDtoSchema.safeParse({ user: userDto, accessToken, refreshToken })
 
-    // const refreshToken = jwt.sign(
-    //     { userId: user.id },
-    //     process.env.JWT_SECRET!,
-    //     { expiresIn: "7d" }
-    // );
-
-    const result = loginResponseDtoSchema.safeParse({ user: userDto, token: accessToken })
     if (!result.success) {
         throw new Error("Invalid response format");
     }

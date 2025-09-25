@@ -9,7 +9,8 @@ export const userDtoSchema = z.object({
 
 export const loginResponseDtoSchema = z.object({
   user: userDtoSchema,
-  token: z.jwt(),
+  accessToken: z.jwt(),
+  refreshToken: z.jwt(),
 })
 
 export type UserDto = z.infer<typeof userDtoSchema>;

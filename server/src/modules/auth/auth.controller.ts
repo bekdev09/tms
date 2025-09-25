@@ -9,6 +9,6 @@ export async function register(req: Request, res: Response) {
 
 export async function login(req: Request, res: Response) {
     const { email, password } = req.body;
-    const tokens = await authService.login(email, password);
-    res.status(StatusCodes.OK).json(tokens);
+    const { user, accessToken } = await authService.login(email, password);
+    res.status(StatusCodes.OK).json({ user, accessToken });
 }

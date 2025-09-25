@@ -1,28 +1,30 @@
-import jwt from 'jsonwebtoken';
+import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 import { Response } from "express";
 import { env } from '../configs/env.ts';
-import { AuthPayload } from "../modules/auth/auth.schemas.ts";
-import { UserDto } from '../modules/auth/auth.dto.ts';
+import { AuthPayload, DecodedAuthPayload, DecodedAuthPayloadSchema } from "../modules/auth/auth.schemas.ts";
 
-export const createJWT = ({ payload }: { payload: AuthPayload }): string => {
+export const createJWT = ({ payload, isAccessToken }: { payload: AuthPayload, isAccessToken: boolean }): string => {
 
-  if (!env.JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined in environment variables");
-  }
+  const JWT_SECRET: Secret = isAccessToken ? env.JWT_ACCESS_SECRET : env.JWT_REFRESH_SECRET || "SECRET_KEY";
 
-  const expiresIn: string | number = env.JWT_LIFETIME || "1h";
+  const expiresIn: SignOptions["expiresIn"] =
+    ((isAccessToken ? env.JWT_ACCESTOKEN_LIFETIME : env.JWT_REFRESHTOKEN_LIFETIME) as SignOptions["expiresIn"]) || "1h";
 
-  const token = jwt.sign(
-    { id: 1 },
-    "SECRET_KEY",
-    {
-      expiresIn: expiresIn
-    }
-  );
+  const token = jwt.sign(payload, JWT_SECRET, { expiresIn });
+
   return token;
 };
 
-export const isTokenValid = ({ token }: { token: string }) => jwt.verify(token, env.JWT_SECRET) as unknown as AuthPayload;
+export const verifyJWT = ({ token, isAccessToken }: { token: string, isAccessToken: boolean }): DecodedAuthPayload | null => {
+  try {
+    const decoded = jwt.verify(token, isAccessToken ? env.JWT_ACCESS_SECRET : env.JWT_REFRESH_SECRET);
+    const parsed = DecodedAuthPayloadSchema.safeParse(decoded);
+    if (!parsed.success) return null;
+    return parsed.data;
+  } catch (error) {
+    return null;
+  }
+}
 
 // const attachCookiesToResponse = ({ res, user }: { res: Response, user: UserDto }) => {
 //   const token = createJWT({ payload: user });
