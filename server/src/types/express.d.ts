@@ -1,11 +1,11 @@
 
 // Extend Express Request to include user
-import { AuthPayload } from "./auth.js";
+import { DecodedAuthPayload } from "../modules/auth/auth.schemas.ts";
 
 declare global {
 	namespace Express {
 		interface Request {
-			user?: AuthPayload;
+			user?: DecodedAuthPayload;
 		}
 	}
 }

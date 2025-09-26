@@ -1,7 +1,7 @@
 // src/middleware/authenticate.ts
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { AuthPayload, AuthPayloadSchema } from "../modules/auth/auth.schemas.ts";
+import { AuthPayload, AuthPayloadSchema, DecodedAuthPayload } from "../modules/auth/auth.schemas.ts";
 import { UnauthenticatedError } from "../errors/unauthenticated.ts";
 import { UnauthorizedError } from "../errors/unauthorized.ts";
 import { env } from "../configs/env.ts";
@@ -19,7 +19,7 @@ export function authenticate(requiredRoles?: Role[]) {
       if (!token) {
         throw new UnauthenticatedError("Invalid credentials")
       }
-      const decoded = verifyJWT({ token, isAccessToken: true });
+      const decoded: DecodedAuthPayload | null = verifyJWT({ token, isAccessToken: true });
       if (!decoded) {
         throw new UnauthenticatedError("Unauthorized")
       }

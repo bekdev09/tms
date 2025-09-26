@@ -1,11 +1,9 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import * as authDao from "./auth.dao.ts";
-// import { AuthTokens } from "./auth.types";
 import { RegisterInput } from "./auth.schemas.ts";
 import { LoginResponse, loginResponseDtoSchema, UserDto } from "./auth.dto.ts";
-import { env } from "../../configs/env.ts";
 import { createJWT } from "../../utils/jwt.ts";
+import { InternalServerError } from "../../errors/internal-server.ts";
 
 export async function register(data: RegisterInput) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -30,9 +28,9 @@ export async function login(email: string, password: string): Promise<LoginRespo
     const refreshToken = createJWT({ payload: { id: user.id, role: user.role }, isAccessToken: false })
 
     const result = loginResponseDtoSchema.safeParse({ user: userDto, accessToken, refreshToken })
-
     if (!result.success) {
-        throw new Error("Invalid response format");
+        throw new InternalServerError("Invalid response format")
     }
+
     return result.data;
 }
