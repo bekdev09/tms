@@ -22,7 +22,7 @@ CREATE TABLE "public"."User" (
     "username" TEXT NOT NULL,
     "firstname" TEXT NOT NULL,
     "lastname" TEXT NOT NULL,
-    "patronymic" TEXT NOT NULL,
+    "patronymic" TEXT,
     "email" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
     "password" TEXT NOT NULL,
