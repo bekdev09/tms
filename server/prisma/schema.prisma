@@ -54,8 +54,22 @@ model User {
   histories  TaskHistory[] @relation("taskHistory_actor")
   // notifications Notification[]
 
-  historiesAsFrom TaskHistory[] @relation("fromUserHistory")
-  historiesAsTo   TaskHistory[] @relation("toUserHistory")
+  historiesAsFrom TaskHistory[]  @relation("fromUserHistory")
+  historiesAsTo   TaskHistory[]  @relation("toUserHistory")
+  refreshTokens   RefreshToken[]
+}
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  tokenHash  String // hashed opaque token
+  revoked    Boolean  @default(false)
+  replacedBy String? // for rotation
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  ip         String?
+  userAgent  String?
 }
 
 model Task {

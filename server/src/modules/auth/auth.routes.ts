@@ -11,7 +11,7 @@ router.get("/me", authenticate(), (req, res) => {
 });
 router.post("/register", authenticate(["ADMIN", "MANAGER"]), validate(registerSchema), authController.register)
 router.post("/login", validate(loginSchema), authController.login);
-// router.post("/refresh", authController.refreshToken);
+router.post("/refresh", authController.refreshToken);
 // router.post("/forgot-password", authController.forgotPassword);
 // router.post("/reset-password", authController.resetPassword);
 

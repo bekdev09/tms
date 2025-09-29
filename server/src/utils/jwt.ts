@@ -2,6 +2,7 @@ import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 import { Response } from "express";
 import { env } from '../configs/env.ts';
 import { AuthPayload, DecodedAuthPayload, DecodedAuthPayloadSchema } from "../modules/auth/auth.schemas.ts";
+import { UserDto } from '../modules/auth/auth.dto.ts';
 
 export const createJWT = ({ payload, isAccessToken }: { payload: AuthPayload, isAccessToken: boolean }): string => {
 
@@ -26,22 +27,16 @@ export const verifyJWT = ({ token, isAccessToken }: { token: string, isAccessTok
   }
 }
 
-// const attachCookiesToResponse = ({ res, user }: { res: Response, user: UserDto }) => {
-//   const token = createJWT({ payload: user });
+export const attachCookiesToResponse = ({ res, user }: { res: Response, user: UserDto }) => {
+  const token = createJWT({ payload: user, isAccessToken: false });
 
-//   const oneDay = 1000 * 60 * 60 * 24;
+  const oneDay = 1000 * 60 * 60 * 24;
 
-//   res.cookie('token', token, {
-//     httpOnly: true,
-//     expires: new Date(Date.now() + oneDay),
-//     secure: process.env.NODE_ENV === 'production',
-//     sameSite: "strict",
-//     signed: true,
-//   });
-// };
-
-// module.exports = {
-//   createJWT,
-//   isTokenValid,
-//   // attachCookiesToResponse,
-// };
+  res.cookie('token', token, {
+    httpOnly: true,
+    expires: new Date(Date.now() + oneDay),
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: "strict",
+    signed: true,
+  });
+};
