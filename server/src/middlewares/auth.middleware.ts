@@ -9,6 +9,7 @@ import { verifyJWT } from "../utils/jwt.ts";
 
 type Role = "ADMIN" | "MANAGER" | "EMPLOYEE";
 export function authenticate(requiredRoles?: Role[]) {
+
   return (req: Request, _res: Response, next: NextFunction) => {
     try {
       const authHeader = req.headers.authorization;
@@ -19,7 +20,7 @@ export function authenticate(requiredRoles?: Role[]) {
       if (!token) {
         throw new UnauthenticatedError("Invalid credentials")
       }
-      const decoded: DecodedAuthPayload | null = verifyJWT({ token, isAccessToken: true });
+      const decoded: DecodedAuthPayload | null = verifyJWT({ token });
       if (!decoded) {
         throw new UnauthenticatedError("Unauthorized")
       }

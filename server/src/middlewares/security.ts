@@ -7,6 +7,7 @@ import hpp from "hpp";
 import morgan from "morgan"
 import compression from "compression";
 import { sanitizeHtmlBody } from "./sanitize-html.ts";
+import cookieParser from "cookie-parser";
 
 export function setupSecurity(app: Application) {
 	app.disable("x-powered-by");
@@ -37,6 +38,7 @@ export function setupSecurity(app: Application) {
 	app.use(sanitizeHtmlBody);
 
 	app.use(express.json());
+	app.use(cookieParser());
 	app.use(morgan('dev'))
 	app.use(compression({
 		level: 6,
