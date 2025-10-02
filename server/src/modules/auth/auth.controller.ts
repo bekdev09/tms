@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import * as authService from "./auth.service.ts";
 import { StatusCodes } from "http-status-codes";
-import { attachCookiesToResponse } from "../../utils/jwt.ts";
+import { attachCookiesToResponse, revokeRefreshToken } from "../../utils/tokens.ts";
+import { UnauthenticatedError } from "../../errors/unauthenticated.ts";
 
 export async function register(req: Request, res: Response) {
     const user = await authService.register(req.body);
@@ -11,8 +12,8 @@ export async function register(req: Request, res: Response) {
 export async function login(req: Request, res: Response) {
     try {
         const { email, password } = req.body;
-        const { user, accessToken } = await authService.login(email, password);
-        await attachCookiesToResponse({ res, user })
+        const { user, accessToken, refreshToken } = await authService.login(email, password);
+        attachCookiesToResponse({ res, refreshToken })
         res.status(StatusCodes.OK).json({ user, accessToken });
     } catch (error) {
         console.log(error);
@@ -23,27 +24,10 @@ export async function refreshToken(req: Request, res: Response) {
     const oldToken = req.cookies.refreshToken;
     if (!oldToken) return res.status(401).json({ error: "Missing token" });
 
-    const generateTokens = await authService.refreshToken(oldToken)
-    // console.log(generateTokens);
+    const { accessToken, newRefreshToken } = await authService.rotateRefreshToken(oldToken)
 
-    // const record = await verifyRefreshToken(token);
-    // if (!record) return res.status(403).json({ error: "Invalid token" });
-
-    // const accessToken = signAccessToken(record.userId);
-
-    // // Optionally rotate refresh token:
-    // await revokeRefreshToken(record.id);
-    // const newRefreshToken = await issueRefreshToken(record.userId, req.ip, req.headers["user-agent"]);
-
-    // attach refreshtoken to cookie
-    // res.cookie("refreshToken", newRefreshToken, {
-    //     httpOnly: true,
-    //     sameSite: "strict",
-    //     secure: process.env.NODE_ENV === "production",
-    //     maxAge: 1000 * 60 * 60 * 24 * 30,
-    // });
-
-    // res.json({ accessToken });
+    attachCookiesToResponse({ res, refreshToken: newRefreshToken })
+    res.json({ accessToken });
 }
 
 export async function logoutHandler(req: Request, res: Response) {
@@ -51,7 +35,7 @@ export async function logoutHandler(req: Request, res: Response) {
     if (token) {
         const [tokenId] = token.split(".");
         if (tokenId) {
-            // await revokeRefreshToken(tokenId);
+            await revokeRefreshToken(tokenId);
         }
         res.clearCookie("refreshToken");
     }

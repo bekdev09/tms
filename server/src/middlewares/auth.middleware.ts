@@ -5,7 +5,7 @@ import { AuthPayload, AuthPayloadSchema, DecodedAuthPayload } from "../modules/a
 import { UnauthenticatedError } from "../errors/unauthenticated.ts";
 import { UnauthorizedError } from "../errors/unauthorized.ts";
 import { env } from "../configs/env.ts";
-import { verifyJWT } from "../utils/jwt.ts";
+import { verifyJWT } from "../utils/tokens.ts";
 
 type Role = "ADMIN" | "MANAGER" | "EMPLOYEE";
 export function authenticate(requiredRoles?: Role[]) {

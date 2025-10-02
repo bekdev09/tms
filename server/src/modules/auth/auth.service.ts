@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
 import * as authDao from "./auth.dao.ts";
-import { RegisterInput } from "./auth.schemas.ts";
+import { DecodedAuthPayload, RegisterInput } from "./auth.schemas.ts";
 import { LoginResponse, loginResponseDtoSchema, UserDto } from "./auth.dto.ts";
-import { createJWT, verifyRefreshToken } from "../../utils/jwt.ts";
+import { createJWT, issueRefreshToken, revokeAllRefreshTokensForUser, revokeRefreshToken, revokeTokensByDevice, verifyRefreshToken } from "../../utils/tokens.ts";
 import { InternalServerError } from "../../errors/internal-server.ts";
 import { UnauthorizedError } from "../../errors/unauthorized.ts";
 
@@ -27,6 +27,18 @@ export async function login(email: string, password: string): Promise<LoginRespo
 
     const accessToken = createJWT({ payload: { id: user.id, role: user.role } })
 
+    const absoluteExpiry: Date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);;
+
+    // //revoke refresh tokens by device
+    // const ip = req.ip;
+    // const userAgent = req.headers["user-agent"] ?? null;
+    // await revokeTokensByDevice(user.id, ip, userAgent);
+
+    // //revoke refresh token by user
+    await revokeAllRefreshTokensForUser(user.id);
+    // issue new refresh token on log in
+    const refreshToken = await issueRefreshToken(user.id, absoluteExpiry)
+
     const result = loginResponseDtoSchema.safeParse({ user: userDto, accessToken, refreshToken })
     if (!result.success) {
         throw new InternalServerError("Invalid response format")
@@ -35,14 +47,31 @@ export async function login(email: string, password: string): Promise<LoginRespo
     return result.data;
 }
 
-export async function refreshToken(oldToken: string, ip?: string, userAgent?: string) {
+export async function rotateRefreshToken(oldToken: string, ip?: string, userAgent?: string) {
     const record = await verifyRefreshToken(oldToken);
-    if (!record) throw new UnauthorizedError("Invalid token")
-    console.log("record----->>>>", record);
+    if (!record) throw new UnauthorizedError("Invalid Credentials")
 
-    // const accessToken = createJWT({ payload: { id: user.id, role: user.role } })
+    const findUserAttachedToToken = await authDao.findUserById(record.userId)
+    if (!findUserAttachedToToken) throw new UnauthorizedError("Invalid Credentials")
 
-    // Optionally rotate refresh token:
-    // await revokeRefreshToken(record.id);
-    // const newRefreshToken = await issueRefreshToken(record.userId, req.ip, req.headers["user-agent"]);
+    const accessToken = createJWT({ payload: { id: findUserAttachedToToken.id, role: findUserAttachedToToken.role } })
+
+    await revokeRefreshToken(record.id);
+    // // Revoke old token only (rotation)
+    // const userId = record.userId;
+    // await revokeTokensByDevice(userId, ip, userAgent);
+
+    const idleExpiryMs = 1000 * 60 * 60 * 24;
+    const absoluteExpiry = record.absoluteExpiry;
+
+    const newRefreshToken = await issueRefreshToken(
+        record.userId,
+        absoluteExpiry,
+        ip,
+        userAgent,
+        idleExpiryMs
+    );
+
+    return { accessToken, newRefreshToken }
 }
+

@@ -60,16 +60,17 @@ model User {
 }
 
 model RefreshToken {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  tokenHash  String // hashed opaque token
-  revoked    Boolean  @default(false)
-  replacedBy String? // for rotation
-  createdAt  DateTime @default(now())
-  expiresAt  DateTime
-  ip         String?
-  userAgent  String?
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  tokenHash      String // hashed opaque token
+  revoked        Boolean  @default(false)
+  replacedBy     String? // for rotation
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+  absoluteExpiry DateTime
+  ip             String?
+  userAgent      String?
 }
 
 model Task {
