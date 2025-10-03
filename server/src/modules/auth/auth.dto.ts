@@ -14,5 +14,11 @@ export const loginResponseDtoSchema = z.object({
   refreshToken: z.string().length(101)
 }).strict()
 
+export const refreshResponseDtoSchema = z.object({
+  accessToken: z.jwt(),
+  refreshToken: z.string().length(101)
+}).strict()
+
 export type UserDto = z.infer<typeof userDtoSchema>;
 export type LoginResponse = z.infer<typeof loginResponseDtoSchema>;
+export type RefreshResponse = z.infer<typeof refreshResponseDtoSchema>;

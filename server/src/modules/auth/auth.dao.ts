@@ -19,6 +19,6 @@ export async function findUserById(id: string): Promise<User | null> {
     return prisma.user.findUnique({ where: { id } })
 }
 
-export async function writeRefreshToken(data: Prisma.RefreshTokenUncheckedCreateInput): Promise<RefreshToken | null> {
+export async function writeRefreshToken(data: Prisma.RefreshTokenUncheckedCreateInput): Promise<RefreshToken> {
     return prisma.refreshToken.create({ data })
 }

@@ -3,6 +3,8 @@ import * as authController from "./auth.controller.ts";
 import { loginSchema, registerSchema } from "./auth.schemas.ts";
 import { validate } from "../../middlewares/validateRequest.ts";
 import { authenticate } from "../../middlewares/auth.middleware.ts";
+import { jobManager } from "../../jobs/jobManager.ts";
+import { cleanupExpiredTokens } from "../../jobs/cleanupRefreshToken.ts";
 // import { authenticate } from "../../middlewares/auth.middleware.ts";
 const router = Router();
 
@@ -18,5 +20,14 @@ router.post("/refresh", authController.refreshToken);
 // Authenticated
 // router.post("/logout", /* authenticate(), */ authController.logout);
 // router.post("/change-password", /* authenticate(), */ authController.changePassword);
+router.post("/jobs/cleanupTokens/restart", (req, res) => {
+    const { schedule } = req.body; // e.g., "0 3 * * *"
+    jobManager.restartJob("cleanupTokens", {
+        schedule,
+        task: cleanupExpiredTokens,
+    });
+
+    res.json({ message: `Cleanup job restarted with schedule: ${schedule}` });
+});
 
 export default router;

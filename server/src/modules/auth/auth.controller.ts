@@ -3,6 +3,7 @@ import * as authService from "./auth.service.ts";
 import { StatusCodes } from "http-status-codes";
 import { attachCookiesToResponse, revokeRefreshToken } from "../../utils/tokens.ts";
 import { UnauthenticatedError } from "../../errors/unauthenticated.ts";
+import { UnauthorizedError } from "../../errors/unauthorized.ts";
 
 export async function register(req: Request, res: Response) {
     const user = await authService.register(req.body);
@@ -17,17 +18,28 @@ export async function login(req: Request, res: Response) {
         res.status(StatusCodes.OK).json({ user, accessToken });
     } catch (error) {
         console.log(error);
+        res.clearCookie("refreshToken");
     }
 }
 
 export async function refreshToken(req: Request, res: Response) {
-    const oldToken = req.cookies.refreshToken;
-    if (!oldToken) return res.status(401).json({ error: "Missing token" });
+    try {
 
-    const { accessToken, newRefreshToken } = await authService.rotateRefreshToken(oldToken)
+        const oldToken = req.cookies.refreshToken;
+        if (!oldToken) throw new UnauthorizedError("Invalid Credentials")
 
-    attachCookiesToResponse({ res, refreshToken: newRefreshToken })
-    res.json({ accessToken });
+        const { accessToken, refreshToken } = await authService.rotateRefreshToken(oldToken)
+
+        attachCookiesToResponse({ res, refreshToken })
+        res.json({ accessToken });
+    } catch (err: unknown) {
+        res.clearCookie("refreshToken");
+
+        if (err instanceof Error) {
+            console.warn(`Refresh token failed: ${err.message}, IP: ${req.ip}, User-Agent: ${req.headers["user-agent"]}`);
+        }
+        throw new UnauthorizedError("Invalid Credentials")
+    }
 }
 
 export async function logoutHandler(req: Request, res: Response) {

@@ -1,10 +1,11 @@
 import bcrypt from "bcryptjs";
 import * as authDao from "./auth.dao.ts";
 import { DecodedAuthPayload, RegisterInput } from "./auth.schemas.ts";
-import { LoginResponse, loginResponseDtoSchema, UserDto } from "./auth.dto.ts";
+import { LoginResponse, loginResponseDtoSchema, RefreshResponse, refreshResponseDtoSchema, UserDto } from "./auth.dto.ts";
 import { createJWT, issueRefreshToken, revokeAllRefreshTokensForUser, revokeRefreshToken, revokeTokensByDevice, verifyRefreshToken } from "../../utils/tokens.ts";
 import { InternalServerError } from "../../errors/internal-server.ts";
 import { UnauthorizedError } from "../../errors/unauthorized.ts";
+import { refreshToken } from "./auth.controller.ts";
 
 export async function register(data: RegisterInput) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -47,9 +48,11 @@ export async function login(email: string, password: string): Promise<LoginRespo
     return result.data;
 }
 
-export async function rotateRefreshToken(oldToken: string, ip?: string, userAgent?: string) {
+export async function rotateRefreshToken(oldToken: string, ip?: string, userAgent?: string): Promise<RefreshResponse> {
     const record = await verifyRefreshToken(oldToken);
-    if (!record) throw new UnauthorizedError("Invalid Credentials")
+    if (!record) {
+        throw new UnauthorizedError("Invalid Credentials")
+    }
 
     const findUserAttachedToToken = await authDao.findUserById(record.userId)
     if (!findUserAttachedToToken) throw new UnauthorizedError("Invalid Credentials")
@@ -72,6 +75,12 @@ export async function rotateRefreshToken(oldToken: string, ip?: string, userAgen
         idleExpiryMs
     );
 
-    return { accessToken, newRefreshToken }
+    const result = refreshResponseDtoSchema.safeParse({ accessToken, refreshToken: newRefreshToken })
+
+    if (!result.success) {
+        throw new InternalServerError("Invalid response format")
+    }
+
+    return result.data
 }
 

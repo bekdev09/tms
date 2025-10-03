@@ -1,4 +1,6 @@
+import { jobManager } from "../jobs/jobManager.ts";
 import { prisma } from "../prisma/client.ts"; // your prisma client
+import type { Server } from "http";
 
 // --- DB connection with retry/backoff ---
 export async function connectWithRetry(
@@ -7,6 +9,7 @@ export async function connectWithRetry(
 ): Promise<void> {
   for (let i = 0; i < retries; i++) {
     try {
+      jobManager.stopJob("cleanupTokens");
       await prisma.$connect();
       console.log("✅ Database connected");
       return;
@@ -27,12 +30,15 @@ export async function connectWithRetry(
 }
 
 // --- Graceful shutdown ---
-export function setupGracefulShutdown(): void {
+export function setupGracefulShutdown(server?: Server): void {
   const shutdown = async () => {
     console.log("🛑 Shutting down server...");
     try {
       await prisma.$disconnect();
       console.log("✅ Database disconnected");
+      if (server) {
+        server.close(() => console.log("Server closed"));
+      }
     } catch (err) {
       console.error("❌ Error disconnecting DB:", err);
     } finally {

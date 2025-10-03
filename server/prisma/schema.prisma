@@ -71,6 +71,11 @@ model RefreshToken {
   absoluteExpiry DateTime
   ip             String?
   userAgent      String?
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+  @@index([absoluteExpiry])
 }
 
 model Task {
