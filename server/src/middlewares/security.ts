@@ -22,7 +22,7 @@ export function setupSecurity(app: Application) {
 	}));
 
 	app.use(cors({
-		origin: ["https://yourdomain.com"],
+		origin: [process.env.CLIENT_URL || "http://localhost:5173", "https://yourdomain.com"],
 		methods: ["GET", "POST", "PUT", "DELETE"],
 		credentials: true,
 	}));

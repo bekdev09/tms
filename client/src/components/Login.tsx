@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { useLoginMutation } from '../store/api/authApi';
+import { useAppDispatch } from '../store/hooks';
+import { setAccessToken, setUser } from '../store/slices/authSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 
@@ -9,6 +11,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [login] = useLoginMutation();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,12 +20,14 @@ export default function Login() {
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
+      const data = await login({ email, password }).unwrap();
+      // server returns { user, accessToken } and sets refresh cookie
+      if (data?.accessToken) {
+        dispatch(setAccessToken(data.accessToken));
+      }
+      if (data?.user) {
+        dispatch(setUser(data.user));
+      }
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Failed to login');

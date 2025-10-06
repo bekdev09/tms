@@ -7,6 +7,7 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAppSelector((state) => state.auth);
+  console.log('ProtectedRoute render, user:', user, 'loading:', loading);
 
   if (loading) {
     return (

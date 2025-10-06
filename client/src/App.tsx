@@ -5,6 +5,7 @@ import { store } from './store/store';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { setTheme } from './store/slices/themeSlice';
 import AuthProvider from './components/AuthProvider';
+import PersistLogin from './components/PersistLogin';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -24,21 +25,23 @@ function AppContent() {
 
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </AuthProvider>
+      <PersistLogin>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </AuthProvider>
+      </PersistLogin>
     </BrowserRouter>
   );
 }

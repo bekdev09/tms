@@ -44,7 +44,7 @@ export const attachCookiesToResponse = async ({ res, refreshToken }: { res: Resp
     httpOnly: true,
     expires: new Date(Date.now() + oneDay),
     secure: process.env.NODE_ENV === 'production',
-    sameSite: "strict",
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   });
 };
 

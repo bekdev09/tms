@@ -25,6 +25,7 @@ export async function login(req: Request, res: Response) {
 export async function refreshToken(req: Request, res: Response) {
     try {
 
+        console.log('Refresh endpoint hit. Cookies:', req.cookies);
         const oldToken = req.cookies.refreshToken;
         if (!oldToken) throw new UnauthorizedError("Invalid Credentials")
 
