@@ -10,6 +10,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
+import DashboardHome from './components/DashboardHome';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function AppContent() {
   const dispatch = useAppDispatch();
@@ -29,16 +32,16 @@ function AppContent() {
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
+              <Route index element={<DashboardHome />} />
+              <Route path="register" element={
+                <ProtectedRoute allowedRoles={["ADMIN", "MANAGER"]}>
+                  <Register />
+                </ProtectedRoute>
+              } />
+            </Route>
           </Routes>
         </AuthProvider>
       </PersistLogin>
@@ -50,6 +53,7 @@ function App() {
   return (
     <Provider store={store}>
       <AppContent />
+      <ToastContainer />
     </Provider>
   );
 }

@@ -1,61 +1,36 @@
-import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
-import { supabase, DataSubmission } from '../../lib/supabase';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import type { DataSubmission } from '../../lib/supabase';
+
+const API_BASE = (import.meta.env.VITE_API_URL as string) || 'http://localhost:3000/api/v1';
+
+const baseQuery = fetchBaseQuery({
+  baseUrl: API_BASE,
+  credentials: 'include',
+  prepareHeaders: (headers, { getState }) => {
+    try {
+      const state: any = getState();
+      const token = state?.auth?.accessToken ?? null;
+      if (token) headers.set('Authorization', `Bearer ${token}`);
+    } catch { }
+    return headers;
+  },
+});
 
 export const dataApi = createApi({
   reducerPath: 'dataApi',
-  baseQuery: fakeBaseQuery(),
+  baseQuery,
   tagTypes: ['DataSubmissions'],
   endpoints: (builder) => ({
     getSubmissions: builder.query<DataSubmission[], void>({
-      queryFn: async () => {
-        const { data, error } = await supabase
-          .from('data_submissions')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          return { error: { status: 'CUSTOM_ERROR', error: error.message } };
-        }
-
-        return { data: data || [] };
-      },
+      query: () => ({ url: '/submissions', method: 'GET' }),
       providesTags: ['DataSubmissions'],
     }),
     createSubmission: builder.mutation<DataSubmission, Partial<DataSubmission>>({
-      queryFn: async (submission) => {
-        const { data: userData } = await supabase.auth.getUser();
-
-        if (!userData.user) {
-          return { error: { status: 'CUSTOM_ERROR', error: 'Not authenticated' } };
-        }
-
-        const { data, error } = await supabase
-          .from('data_submissions')
-          .insert([{ ...submission, user_id: userData.user.id }])
-          .select()
-          .single();
-
-        if (error) {
-          return { error: { status: 'CUSTOM_ERROR', error: error.message } };
-        }
-
-        return { data };
-      },
+      query: (submission) => ({ url: '/submissions', method: 'POST', body: submission }),
       invalidatesTags: ['DataSubmissions'],
     }),
     deleteSubmission: builder.mutation<void, string>({
-      queryFn: async (id) => {
-        const { error } = await supabase
-          .from('data_submissions')
-          .delete()
-          .eq('id', id);
-
-        if (error) {
-          return { error: { status: 'CUSTOM_ERROR', error: error.message } };
-        }
-
-        return { data: undefined };
-      },
+      query: (id) => ({ url: `/submissions/${id}`, method: 'DELETE' }),
       invalidatesTags: ['DataSubmissions'],
     }),
   }),

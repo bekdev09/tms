@@ -68,6 +68,9 @@ export const authApi = createApi({
         }
       },
     }),
+    register: builder.mutation<any, { email: string; password: string }>({
+      query: (creds) => ({ url: '/auth/register', method: 'POST', body: creds }),
+    }),
     refresh: builder.mutation<any, void>({
       query: () => ({ url: '/auth/refresh', method: 'POST' }),
       async onQueryStarted(_arg, { queryFulfilled, dispatch }) {
@@ -100,6 +103,6 @@ export const authApi = createApi({
   }),
 });
 
-export const { useLoginMutation, useRefreshMutation, useGetMeQuery, useLogoutMutation } = authApi;
+export const { useLoginMutation, useRegisterMutation, useRefreshMutation, useGetMeQuery, useLogoutMutation } = authApi;
 
 export default authApi;
