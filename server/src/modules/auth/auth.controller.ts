@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import * as authService from "./auth.service.ts";
 import { StatusCodes } from "http-status-codes";
 import { attachCookiesToResponse, revokeRefreshToken, revokeAllRefreshTokensForUser } from "../../utils/tokens.ts";
-import { UnauthenticatedError } from "../../errors/unauthenticated.ts";
 import { UnauthorizedError } from "../../errors/unauthorized.ts";
 
 export async function register(req: Request, res: Response) {
@@ -17,8 +16,8 @@ export async function login(req: Request, res: Response) {
         attachCookiesToResponse({ res, refreshToken })
         res.status(StatusCodes.OK).json({ user, accessToken });
     } catch (error) {
-        console.log(error);
         res.clearCookie("refreshToken");
+        throw new UnauthorizedError("Invalid Credentials")
     }
 }
 

@@ -1,11 +1,10 @@
 import bcrypt from "bcryptjs";
 import * as authDao from "./auth.dao.ts";
-import { DecodedAuthPayload, RegisterInput } from "./auth.schemas.ts";
+import { RegisterInput } from "./auth.schemas.ts";
 import { LoginResponse, loginResponseDtoSchema, RefreshResponse, refreshResponseDtoSchema, UserDto } from "./auth.dto.ts";
 import { createJWT, issueRefreshToken, revokeAllRefreshTokensForUser, revokeRefreshToken, revokeTokensByDevice, verifyRefreshToken } from "../../utils/tokens.ts";
 import { InternalServerError } from "../../errors/internal-server.ts";
 import { UnauthorizedError } from "../../errors/unauthorized.ts";
-import { refreshToken } from "./auth.controller.ts";
 
 export async function register(data: RegisterInput) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
