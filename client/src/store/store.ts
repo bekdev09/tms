@@ -2,18 +2,16 @@ import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import themeReducer from './slices/themeSlice';
 import authReducer from './slices/authSlice';
-import { dataApi } from './api/dataApi';
-import authApi from './api/authApi';
+import baseApi from './api/baseApi';
 
 export const store = configureStore({
   reducer: {
-    theme: themeReducer,
-    auth: authReducer,
-    [dataApi.reducerPath]: dataApi.reducer,
-    [authApi.reducerPath]: authApi.reducer,
+    theme: themeReducer, // Registration of theme normal reducer
+    auth: authReducer, // Registration of authentication normal reducer
+    [baseApi.reducerPath]: baseApi.reducer, // Registration of rtk query reducer
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(dataApi.middleware, authApi.middleware),
+    getDefaultMiddleware().concat(baseApi.middleware),
 });
 
 setupListeners(store.dispatch);

@@ -1,103 +1,118 @@
-import React, { useState, useEffect } from 'react';
-import { useCreateSubmissionMutation, useGetSubmissionsQuery, useDeleteSubmissionMutation } from '../store/api/dataApi';
+import React, { useState } from 'react';
 import { Upload, Trash2 } from 'lucide-react';
+import { useDeleteSubmissionMutation, useGetSubmissionsQuery } from '../store/api/authApi';
+import { getFileNameFromDisposition } from '../utils/helper';
+import { useAppSelector } from '../store/hooks';
 
 export default function DashboardHome() {
-  const [rowCount, setRowCount] = useState(1);
-  const [textInputs, setTextInputs] = useState<string[]>(['']);
-  const [textareaValue, setTextareaValue] = useState('');
+  // const [rowCount, setRowCount] = useState(1);
+  // const [textInputs, setTextInputs] = useState<string[]>(['']);
+  // const [textareaValue, setTextareaValue] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const [createSubmission] = useCreateSubmissionMutation();
-  const { data: submissions, refetch } = useGetSubmissionsQuery();
+  const { data: submissions } = useGetSubmissionsQuery();
   const [deleteSubmissionMutation] = useDeleteSubmissionMutation();
+  const token = useAppSelector((s) => s.auth.accessToken);
 
-  useEffect(() => {
-    if (rowCount <= 5) {
-      setTextInputs(Array(1).fill(''));
-      setTextareaValue('');
-      setFile(null);
-    } else if (rowCount <= 10) {
-      setTextInputs([]);
-      setTextareaValue('');
-      setFile(null);
-    } else {
-      setTextInputs([]);
-      setTextareaValue('');
-    }
-  }, [rowCount]);
+  // useEffect(() => {
+  //   if (rowCount <= 5) {
+  //     setTextInputs(Array(1).fill(''));
+  //     setTextareaValue('');
+  //     setFile(null);
+  //   } else if (rowCount <= 10) {
+  //     setTextInputs([]);
+  //     setTextareaValue('');
+  //     setFile(null);
+  //   } else {
+  //     setTextInputs([]);
+  //     setTextareaValue('');
+  //   }
+  // }, [rowCount]);
 
-  const addTextInput = () => {
-    if (textInputs.length < 5) {
-      setTextInputs([...textInputs, '']);
-    }
-  };
+  // const addTextInput = () => {
+  //   if (textInputs.length < 5) {
+  //     setTextInputs([...textInputs, '']);
+  //   }
+  // };
 
-  const updateTextInput = (index: number, value: string) => {
-    const newInputs = [...textInputs];
-    newInputs[index] = value;
-    setTextInputs(newInputs);
-  };
+  // const updateTextInput = (index: number, value: string) => {
+  //   const newInputs = [...textInputs];
+  //   newInputs[index] = value;
+  //   setTextInputs(newInputs);
+  // };
 
-  const removeTextInput = (index: number) => {
-    if (textInputs.length > 1) {
-      setTextInputs(textInputs.filter((_, i) => i !== index));
-    }
-  };
+  // const removeTextInput = (index: number) => {
+  //   if (textInputs.length > 1) {
+  //     setTextInputs(textInputs.filter((_, i) => i !== index));
+  //   }
+  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
     setMessage('');
 
+    if (!file) {
+      setMessage('Please select a file first.');
+      return;
+    }
+    setLoading(true);
     try {
-      let submissionData: any = {};
-      let submissionType: 'text' | 'textarea' | 'file' = 'text';
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("http://localhost:3000/api/v1/auth/process-file", {
+        method: "POST",
+        body: formData,
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+        credentials: "include"
+      });
 
-      if (rowCount <= 5) {
-        submissionType = 'text';
-        submissionData = { inputs: textInputs.filter(input => input.trim()) };
-      } else if (rowCount <= 10) {
-        submissionType = 'textarea';
-        submissionData = { content: textareaValue };
-      } else {
-        submissionType = 'file';
-        if (file) {
-          submissionData = {
-            fileName: file.name,
-            fileSize: file.size,
-            fileType: file.type,
-          };
+      if (!res.ok) {
+        if (res.status === 400) {
+          throw new Error("Faqat .txt fayli qabul qilinadi yoki faylda ma'lumot topilmadi");
+        } else if (res.status === 401) {
+          throw new Error("UnAuthenticated")
+        } else if (res.status === 403) {
+          throw new Error("UnAuthorized")
+        } else {
+          throw new Error("Internal Server Error")
         }
       }
 
-      await createSubmission({
-        row_count: rowCount,
-        submission_type: submissionType,
-        data: submissionData,
-      }).unwrap();
+      const disposition = res.headers.get("content-disposition");
+      if (!disposition) {
+        throw new Error("Content-Disposition header is missing");
+      }
+      const filename = getFileNameFromDisposition(disposition) ?? "processed_results.xlsx";
 
-      setMessage('Data submitted successfully!');
-      setTextInputs(['']);
-      setTextareaValue('');
-      setFile(null);
-      refetch();
-    } catch (error: any) {
-      setMessage(error?.message || 'Failed to submit data');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error("erroor: ", err);
+      setMessage(err.message)
+      // alert("Upload/download failed.");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const deleteSubmission = async (id: string) => {
-    try {
-      await deleteSubmissionMutation(id).unwrap();
-    } catch (error) {
-      console.error('Failed to delete submission:', error);
-    }
-  };
+  // const deleteSubmission = async (id: string) => {
+  //   try {
+  //     await deleteSubmissionMutation(id).unwrap();
+  //   } catch (error) {
+  //     console.error('Failed to delete submission:', error);
+  //   }
+  // };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -106,7 +121,7 @@ export default function DashboardHome() {
           <h2 className="text-2xl font-bold mb-6 text-slate-800 dark:text-white">Data Entry</h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                 Number of Rows: <span className="text-blue-600 dark:text-cyan-400 font-bold">{rowCount}</span>
               </label>
@@ -122,9 +137,9 @@ export default function DashboardHome() {
                 <span>1</span>
                 <span>20</span>
               </div>
-            </div>
+            </div> */}
 
-            {rowCount <= 5 && (
+            {/* {rowCount <= 5 && (
               <div className="space-y-4">
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Text Inputs</label>
                 {textInputs.map((input, index) => (
@@ -148,20 +163,20 @@ export default function DashboardHome() {
                   <button type="button" onClick={addTextInput} className="w-full px-4 py-3 text-sm bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">+ Add Input</button>
                 )}
               </div>
-            )}
+            )} */}
 
-            {rowCount > 5 && rowCount <= 10 && (
+            {/* {rowCount > 5 && rowCount <= 10 && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Textarea Input</label>
                 <textarea value={textareaValue} onChange={(e) => setTextareaValue(e.target.value)} rows={6} className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-cyan-500 focus:border-transparent outline-none transition-all" placeholder="Enter your data here..." required />
               </div>
-            )}
+            )} */}
 
-            {rowCount > 10 && (
+            {/*rowCount > 10 &&*/ (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">File Upload</label>
                 <div className="relative">
-                  <input type="file" id="file-upload" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" required />
+                  <input type="file" id="file-upload" accept='.txt' onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" required />
                   <label htmlFor="file-upload" className="block border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-12 text-center hover:border-blue-500 dark:hover:border-cyan-500 transition-all cursor-pointer bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700/50 dark:to-slate-800/50 hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-900/20 dark:hover:to-cyan-900/20 group">
                     <div className="flex flex-col items-center space-y-4">
                       <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all">
@@ -196,15 +211,15 @@ export default function DashboardHome() {
               </div>
             )}
 
-            <button type="submit" disabled={submitting} className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">{submitting ? 'Submitting...' : 'Submit Data'}</button>
+            <button type="submit" disabled={!file || loading} className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"> {loading ? "Processing..." : "Upload & Download"}</button>
           </form>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 transition-colors">
+        {/* <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 transition-colors">
           <h2 className="text-2xl font-bold mb-6 text-slate-800 dark:text-white">Recent Submissions</h2>
           <div className="space-y-4 max-h-[600px] overflow-y-auto">
             {submissions && submissions.length > 0 ? (
-              submissions.map((submission) => (
+              submissions.map((submission: any) => (
                 <div key={submission.id} className="p-4 border border-slate-200 dark:border-slate-700 rounded-xl hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-2">
                     <div>
@@ -222,7 +237,7 @@ export default function DashboardHome() {
               <p className="text-center text-slate-500 dark:text-slate-400 py-8">No submissions yet</p>
             )}
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
