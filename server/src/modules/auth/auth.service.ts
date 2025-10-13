@@ -5,6 +5,8 @@ import { LoginResponse, loginResponseDtoSchema, RefreshResponse, refreshResponse
 import { createJWT, issueRefreshToken, revokeAllRefreshTokensForUser, revokeRefreshToken, revokeTokensByDevice, verifyRefreshToken } from "../../utils/tokens.ts";
 import { InternalServerError } from "../../errors/internal-server.ts";
 import { UnauthorizedError } from "../../errors/unauthorized.ts";
+import { NotFoundError } from "../../errors/not-found.ts";
+import { UnauthenticatedError } from "../../errors/unauthenticated.ts";
 
 export async function register(data: RegisterInput) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -14,10 +16,11 @@ export async function register(data: RegisterInput) {
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
     const user = await authDao.findUserByEmail(email);
-    if (!user) throw new Error("Invalid credentials");
+    
+    if (!user) throw new NotFoundError("Invalid credentials");
 
     const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) throw new Error("Invalid credentials");
+    if (!isValid) throw new UnauthenticatedError("Invalid credentials");
     const userDto: UserDto = {
         id: user.id,
         username: user.username,

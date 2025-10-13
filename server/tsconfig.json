@@ -2,7 +2,7 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./dist",
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
@@ -11,7 +11,7 @@
     "moduleResolution": "NodeNext",
     // For nodejs:
     // "lib": ["esnext"],
-    // "types": ["node"],
+    "types": ["node"],
     // and npm install -D @types/node
     // Other Outputs
     "sourceMap": true,
@@ -43,7 +43,8 @@
   "include": [
     "src",
     "app.ts",
-    "server.ts"
+    "server.ts",
+    "prisma"
   ],
   "exclude": [
     "node_modules",
