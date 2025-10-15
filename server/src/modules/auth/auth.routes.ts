@@ -15,6 +15,7 @@ import { BadRequestError } from "../../errors/bad-request.ts";
 import { UnauthenticatedError } from "../../errors/unauthenticated.ts";
 import { UnauthorizedError } from "../../errors/unauthorized.ts";
 import { InternalServerError } from "../../errors/internal-server.ts";
+import { de } from "zod/locales";
 
 
 const router = Router();
@@ -56,8 +57,8 @@ router.post("/process-file", authenticate(), upload.single("file"), async (req, 
     const rows = content
       .split("\n")
       .map((line) => {
-        const [name, id] = line.trim().split(/\s+|,/); // support space or comma
-        return { name, id };
+        const [id, name] = line.trim().split(/\s*&\s*/);
+        return { id, name };
       })
       .filter((r) => r.name && r.id);
 
@@ -65,6 +66,8 @@ router.post("/process-file", authenticate(), upload.single("file"), async (req, 
       await fs.promises.unlink(req.file.path);
       return res.status(400).json({ message: "No valid data found in file" });
     }
+    console.dir(rows, { depth: null });
+
 
     const promises = rows.map((row) =>
       limit(async () => {
@@ -73,17 +76,41 @@ router.post("/process-file", authenticate(), upload.single("file"), async (req, 
             `https://api.example.com/company/${row.id}`
           );
           return {
-            id: row.id,
             name: row.name,
+            id: row.id,
             externalInfo: response.data.info || "N/A",
           };
-        } catch (err) {
+        } catch (err: any) {
+          // console.log("Error fetching data for--->", row.id, err.message);
+
           return { name: row.name, id: row.id, externalInfo: "Error" };
         }
+
+        // // alternative way with 2 API calls
+        // try {
+        //   const [api1, api2] = await Promise.allSettled([
+        //     axios.get(`https://api.example1.com/company/${row.id}`),
+        //     axios.get(`https://api.example2.com/extra/${row.id}`),
+        //   ]);
+
+        //   const external1 =
+        //     api1.status === "fulfilled"
+        //       ? api1.value.data.info || "N/A"
+        //       : "Error";
+        //   const external2 =
+        //     api2.status === "fulfilled"
+        //       ? api2.value.data.score || "N/A"
+        //       : "Error";
+
+        //   return { name: row.name, id: row.id, external1, external2 };
+        // } catch (err) {
+        //   return { name: row.name, id: row.id, external1: "Error", external2: "Error" };
+        // }
       })
     );
 
     const results = await Promise.all(promises);
+    // console.log(results);
 
     // Create XLSX workbook
     const worksheet = xlsx.utils.json_to_sheet(results);
@@ -95,7 +122,11 @@ router.post("/process-file", authenticate(), upload.single("file"), async (req, 
     console.log(outputPath);
 
     // Send file as response
-    res.download(outputPath, "processed_results.xlsx", async (err) => {
+    const uniqueFilename = `results_${Date.now()}.xlsx`;
+    res.setHeader("Content-Disposition", `attachment; filename="${uniqueFilename}"`);
+    res.setHeader("x-filename", uniqueFilename);
+
+    res.download(outputPath, uniqueFilename, async (err) => {
       if (err) console.error("Error sending file:", err);
       try {
         await fs.promises.unlink(filePath);
@@ -104,7 +135,7 @@ router.post("/process-file", authenticate(), upload.single("file"), async (req, 
         console.error("Error cleaning up files:", deleteErr);
       }
     });
-    // res.json({ message: "✅ File processed successfully", fileContent: content });
+
   } catch (error) {
     if (error instanceof Error) {
       if (error instanceof BadRequestError) {

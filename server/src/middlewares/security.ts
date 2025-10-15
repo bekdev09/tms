@@ -25,6 +25,7 @@ export function setupSecurity(app: Application) {
 		origin: [process.env.CLIENT_URL || "http://localhost:5173", "https://yourdomain.com"],
 		methods: ["GET", "POST", "PUT", "DELETE"],
 		credentials: true,
+		exposedHeaders: ["Content-Disposition"],
 	}));
 
 	app.use(rateLimit({

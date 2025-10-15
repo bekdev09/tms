@@ -14,7 +14,7 @@ export default function PersistLogin({ children }: PersistLoginProps) {
   const accessToken = useAppSelector((s) => s.auth.accessToken);
   const [refresh] = useRefreshMutation();
   const [ready, setReady] = useState(false);
-  console.log('PersistLogin render, accessToken:', accessToken);
+  // console.log('PersistLogin render, accessToken:', accessToken);
 
   useEffect(() => {
     let mounted = true;
@@ -22,17 +22,17 @@ export default function PersistLogin({ children }: PersistLoginProps) {
     async function ensureAuth() {
       if (accessToken) {
         // already have in-memory token
-        console.log('PersistLogin: existing access token found, skipping refresh');
+        // console.log('PersistLogin: existing access token found, skipping refresh');
 
         if (mounted) setReady(true);
         return;
       }
 
       try {
-        console.log('PersistLogin: no access token found, attempting refresh');
+        // console.log('PersistLogin: no access token found, attempting refresh');
         // try silent refresh (server will read httpOnly cookie)
         const r = await refresh().unwrap();
-        console.log('PersistLogin: refresh response', r);
+        // console.log('PersistLogin: refresh response', r);
         if (r?.accessToken) {
           dispatch(setAccessToken(r.accessToken));
           // deterministically fetch /auth/me using the fresh access token

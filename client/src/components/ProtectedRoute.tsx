@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { user, loading } = useAppSelector((state) => state.auth);
-  console.log('ProtectedRoute render, user:', user, 'loading:', loading, 'allowedRoles:', allowedRoles);
+  // console.log('ProtectedRoute render, user:', user, 'loading:', loading, 'allowedRoles:', allowedRoles);
 
   if (loading) {
     return (

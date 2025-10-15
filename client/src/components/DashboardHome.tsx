@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, Trash2 } from 'lucide-react';
-import { useDeleteSubmissionMutation, useGetSubmissionsQuery } from '../store/api/authApi';
+import { Upload } from 'lucide-react';
 import { getFileNameFromDisposition } from '../utils/helper';
 import { useAppSelector } from '../store/hooks';
 
@@ -11,9 +10,6 @@ export default function DashboardHome() {
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const { data: submissions } = useGetSubmissionsQuery();
-  const [deleteSubmissionMutation] = useDeleteSubmissionMutation();
   const token = useAppSelector((s) => s.auth.accessToken);
 
   // useEffect(() => {
@@ -81,12 +77,17 @@ export default function DashboardHome() {
           throw new Error("Internal Server Error")
         }
       }
-
       const disposition = res.headers.get("content-disposition");
       if (!disposition) {
         throw new Error("Content-Disposition header is missing");
       }
-      const filename = getFileNameFromDisposition(disposition) ?? "processed_results.xlsx";
+      const customHeaderName = res.headers.get("x-filename");
+      // console.log(customHeaderName);
+
+      const filename =
+        customHeaderName ||
+        getFileNameFromDisposition(disposition) ||
+        "processed_results.xlsx"; // final fallback
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
