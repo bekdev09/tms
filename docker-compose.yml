@@ -52,13 +52,16 @@ services:
       - app-network
 
   dns:
-    image: andyshinn/dnsmasq:2.85
+    image: jpillora/dnsmasq
     container_name: dns
     restart: always
+    cap_add:
+      - NET_ADMIN
     volumes:
       - ./dns/dnsmasq.conf:/etc/dnsmasq.conf
     ports:
       - "53:53/udp"
+    command: ["--address=/myapp.local/192.168.1.100"]
     networks:
       - app-network
 
