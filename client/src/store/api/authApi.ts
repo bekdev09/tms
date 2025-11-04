@@ -48,13 +48,8 @@ export const authApiSlice = baseApiSlice.injectEndpoints({
         }
       },
     }),
-    // Data submissions
-    getSubmissions: builder.query<DataSubmission[], void>({
-      query: () => ({ url: '/submissions', method: 'GET' }),
-      providesTags: ['DataSubmissions'],
-    }),
     uploadFile: builder.mutation<
-      any, // ✅ Response type
+      any,                  // ✅ Response type
       FormData              // ✅ Request body type
     >({
       query: (formData) => ({
@@ -63,18 +58,15 @@ export const authApiSlice = baseApiSlice.injectEndpoints({
         body: formData,
       }),
     }),
-    createSubmission: builder.mutation<DataSubmission, Partial<DataSubmission>>({
-      query: (submission) => ({ url: 'auth/process-file', method: 'POST', body: submission }),
-      invalidatesTags: ['DataSubmissions'],
-    }),
-    deleteSubmission: builder.mutation<void, string>({
-      query: (id) => ({ url: `/submissions/${id}`, method: 'DELETE' }),
-      invalidatesTags: ['DataSubmissions'],
+     // Data submissions
+    getSubmissions: builder.query<DataSubmission[], void>({
+      query: () => ({ url: '/submissions', method: 'GET' }),
+      providesTags: ['DataSubmissions'],
     }),
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useRefreshMutation, useLogoutMutation, useGetSubmissionsQuery, useUploadFileMutation, useCreateSubmissionMutation, useDeleteSubmissionMutation } = authApiSlice;
+export const { useLoginMutation, useRegisterMutation, useRefreshMutation, useLogoutMutation, useGetSubmissionsQuery, useUploadFileMutation } = authApiSlice;
 export default authApiSlice;
 
 
