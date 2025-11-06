@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAppSelector, useAppDispatch } from '../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { LogOut, UserPlus, Home } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
-import { useLogoutMutation } from '../store/api/authApi';
-import { clearAuth } from '../store/slices/authSlice';
+import ThemeToggle from '../ThemeToggle';
+import { useLogoutMutation } from '../../features/auth/authApi';
+import { clearAuth } from '../../features/auth/authSlice';
 
 export default function DashboardNavbar() {
   const navigate = useNavigate();

@@ -1,5 +1,4 @@
-import { baseApiSlice } from "./baseApi";
-import type { DataSubmission } from '../../lib/supabase';
+import { baseApiSlice } from '../../store/api/baseApi';
 
 export const authApiSlice = baseApiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -58,15 +57,8 @@ export const authApiSlice = baseApiSlice.injectEndpoints({
         body: formData,
       }),
     }),
-     // Data submissions
-    getSubmissions: builder.query<DataSubmission[], void>({
-      query: () => ({ url: '/submissions', method: 'GET' }),
-      providesTags: ['DataSubmissions'],
-    }),
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useRefreshMutation, useLogoutMutation, useGetSubmissionsQuery, useUploadFileMutation } = authApiSlice;
+export const { useLoginMutation, useRegisterMutation, useRefreshMutation, useLogoutMutation, useUploadFileMutation } = authApiSlice;
 export default authApiSlice;
-
-

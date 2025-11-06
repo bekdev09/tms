@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { useRefreshMutation } from '../store/api/authApi';
-import { setAccessToken, setUser, clearAuth, setLoading } from '../store/slices/authSlice';
+import { useRefreshMutation } from '../features/auth/authApi';
+import { setAccessToken, setUser, clearAuth, setLoading } from '../features/auth/authSlice';
 
 const API_BASE = (import.meta.env.VITE_API_URL as string) || 'http://localhost:3000/api/v1';
 

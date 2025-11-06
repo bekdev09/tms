@@ -4,15 +4,16 @@ import { Provider } from 'react-redux';
 import { store } from './store/store';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { setTheme } from './store/slices/themeSlice';
-import AuthProvider from './components/AuthProvider';
+import AuthProvider from './app/AuthProvider';
 import PersistLogin from './components/PersistLogin';
 import ProtectedRoute from './components/ProtectedRoute';
-import Login from './components/Login';
-import Register from './components/Register';
-import Dashboard from './components/Dashboard';
-import DashboardHome from './components/DashboardHome';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './components/layout/DashboardLayout';
+import DashboardHome from './pages/DashboardHome';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import NotFound from './pages/NotFound';
 
 function AppContent() {
   const dispatch = useAppDispatch();
@@ -42,6 +43,7 @@ function AppContent() {
                 </ProtectedRoute>
               } />
             </Route>
+            <Route path="*" element={<NotFound />} /> 
           </Routes>
         </AuthProvider>
       </PersistLogin>

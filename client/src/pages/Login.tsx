@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useLoginMutation } from '../store/api/authApi';
+import { useLoginMutation } from '../features/auth/authApi';
 import { useAppDispatch } from '../store/hooks';
-import { setAccessToken, setUser } from '../store/slices/authSlice';
+import { setAccessToken, setUser } from '../features/auth/authSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 

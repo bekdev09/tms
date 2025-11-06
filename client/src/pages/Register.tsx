@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useRegisterMutation } from '../store/api/authApi';
+import { useRegisterMutation } from '../features/auth/authApi';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 
