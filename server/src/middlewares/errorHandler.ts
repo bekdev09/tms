@@ -13,7 +13,7 @@ export function errorHandlerMiddleware(
   res: Response,
   _next: NextFunction
 ) {
-  console.error("🔥 Error:", err);
+  // console.error("🔥 Error:", err);
 
   let customError: CustomError = {
     statusCode: err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,

@@ -1,75 +1,49 @@
-import React, { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import {
-  useLazyGetMeQuery,
-  useRefreshMutation,
-} from "./authApi";
-import {
-  setAccessToken,
-  setUser,
-  clearAuth,
-  setLoading,
-} from "./authSlice";
+// src/features/auth/PersistLogin.tsx
+import { useEffect, useState } from "react";
+import { Outlet, Link, useLocation } from "react-router-dom";
+import { useAppSelector } from "../../store/hooks";
+// import { selectCurrentToken } from "./authSlice";
+import { useRefreshMutation } from "./authApi"; // should call POST /auth/refresh
+// import usePersist from "../../hooks/usePersist";
 
-export default function PersistLogin({
-  children,
-}: {
+interface Props {
   children: React.ReactNode;
-}) {
-  const dispatch = useAppDispatch();
-  const accessToken = useAppSelector((s) => s.auth.accessToken);
-  const [ready, setReady] = useState(false);
+}
+export default function PersistLogin({ children }: Props): JSX.Element {
+  // const token = useAppSelector(selectCurrentToken);
+  const token = useAppSelector((s) => s.auth.accessToken);
+  // const [persist] = usePersist();
+  const persist: boolean = true;
+  const location = useLocation();
 
-  const [refresh, { isError: isRefreshError, error: refreshError, isLoading }] =
+  const [refresh, { isLoading, isError, error, isSuccess }] =
     useRefreshMutation();
-  const [getMe, { isError: isGetMeError, error: getMeError }] =
-    useLazyGetMeQuery();
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     let ignore = false;
 
-    const initAuth = async () => {
+    const verify = async () => {
       try {
-        // ✅ Already have token — just fetch user
-        if (accessToken) {
-          const res = await getMe().unwrap();
-          if (res?.user) dispatch(setUser(res.user));
-          return;
-        }
-
-        // ✅ Otherwise, try silent refresh using cookie
-        const refreshed = await refresh().unwrap();
-        if (refreshed?.accessToken) {
-          dispatch(setAccessToken(refreshed.accessToken));
-
-          // Fetch /auth/me with new token
-          const meRes = await getMe().unwrap();
-          if (meRes?.user) dispatch(setUser(meRes.user));
-          else dispatch(clearAuth());
-        } else {
-          dispatch(clearAuth());
+        // if we have no token but persistence is on, try refresh once
+        if (!token && persist && location.pathname !== "/login") {
+          await refresh().unwrap();
         }
       } catch (err) {
-        console.warn("PersistLogin initAuth failed", err);
-        dispatch(clearAuth());
+        console.warn("PersistLogin: refresh failed", err);
       } finally {
-        if (!ignore) {
-          dispatch(setLoading(false));
-          setReady(true);
-        }
+        if (!ignore) setChecked(true);
       }
     };
 
-    initAuth();
+    verify();
     return () => {
       ignore = true;
     };
-  }, [accessToken, dispatch, refresh, getMe]);
+  }, [token, persist, refresh, location.pathname]);
 
-  // --- UI STATES ---
-
-  // 🌀 While checking authentication
-  if (isLoading || !ready) {
+  // 🌀 While checking refresh or token
+  if (isLoading || !checked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -80,28 +54,30 @@ export default function PersistLogin({
     );
   }
 
-  // ⚠️ Handle RTK Query error states (no local state needed)
-  if (isRefreshError || isGetMeError) {
-    const errorMsg =
-      (refreshError as any)?.data?.message ||
-      (getMeError as any)?.data?.message ||
-      "Authentication failed or session expired.";
+  // ⚠️ Refresh failed
+  if (isError) {
+    const msg =
+      (error as any)?.data?.message ||
+      "Session expired or authentication failed.";
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center text-red-500">
-          <h2 className="text-lg font-semibold mb-2">Authentication Error ⚠️</h2>
-          <p className="text-slate-700 mb-4">{errorMsg}</p>
-          <a
-            href="/login"
+          <h2 className="text-lg font-semibold mb-2">
+            Authentication Error ⚠️
+          </h2>
+          <p className="text-slate-700 mb-4">{msg}</p>
+          <Link
+            to="/login"
             className="text-blue-600 hover:underline font-medium"
           >
             Please log in again
-          </a>
+          </Link>
         </div>
       </div>
     );
   }
 
-  // ✅ Auth success or valid token
+  // ✅ Auth ready or refresh succeeded
+  // return <Outlet />;
   return <>{children}</>;
 }

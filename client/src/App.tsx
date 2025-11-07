@@ -1,30 +1,30 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { store } from './store/store';
-import { useAppDispatch, useAppSelector } from './store/hooks';
-import { setTheme } from './store/slices/themeSlice';
-import AuthProvider from './app/AuthProvider';
-import PersistLogin from './features/auth/PersistLogin';
-import ProtectedRoute from './components/ProtectedRoute';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './components/layout/DashboardLayout';
-import DashboardHome from './pages/DashboardHome';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import NotFound from './pages/NotFound';
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Provider } from "react-redux";
+import { store } from "./store/store";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
+import { setTheme } from "./store/slices/themeSlice";
+import AuthProvider from "./app/AuthProvider";
+import PersistLogin from "./features/auth/PersistLogin";
+import ProtectedRoute from "./features/auth/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./components/layout/DashboardLayout";
+import DashboardHome from "./pages/DashboardHome";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import NotFound from "./pages/NotFound";
 
 function AppContent() {
   const dispatch = useAppDispatch();
   const theme = useAppSelector((state) => state.theme.mode);
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem('theme') as 'light' | 'dark';
+    const storedTheme = localStorage.getItem("theme") as "light" | "dark";
     if (storedTheme) {
       dispatch(setTheme(storedTheme));
     }
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme, dispatch]);
 
   return (
@@ -35,15 +35,25 @@ function AppContent() {
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
-              <Route index element={<DashboardHome />} />
-              <Route path="register" element={
-                <ProtectedRoute allowedRoles={["ADMIN", "MANAGER"]}>
-                  <Register />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
                 </ProtectedRoute>
-              } />
+              }
+            >
+              <Route index element={<DashboardHome />} />
+              <Route
+                path="register"
+                element={
+                  <ProtectedRoute allowedRoles={["ADMIN", "MANAGER"]}>
+                    <Register />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
-            <Route path="*" element={<NotFound />} /> 
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
       </PersistLogin>

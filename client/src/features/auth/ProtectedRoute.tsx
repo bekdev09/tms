@@ -1,5 +1,5 @@
-import { Navigate } from 'react-router-dom';
-import { useAppSelector } from '../store/hooks';
+import { Navigate } from "react-router-dom";
+import { useAppSelector } from "../../store/hooks";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -7,7 +7,10 @@ interface ProtectedRouteProps {
   allowedRoles?: string[];
 }
 
-export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+export default function ProtectedRoute({
+  children,
+  allowedRoles,
+}: ProtectedRouteProps) {
   const { user, loading } = useAppSelector((state) => state.auth);
   // console.log('ProtectedRoute render, user:', user, 'loading:', loading, 'allowedRoles:', allowedRoles);
 
@@ -28,9 +31,13 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   // if allowedRoles specified, ensure user's role is included
   if (allowedRoles && allowedRoles.length > 0) {
-    const role = (user && (user.role || user?.roles || user?.roleName)) as string | undefined;
+    const role = (user && (user.role || user?.roles || user?.roleName)) as
+      | string
+      | undefined;
     // support user.role being string or array
-    const hasRole = Array.isArray(role) ? role.some((r) => allowedRoles.includes(r)) : !!role && allowedRoles.includes(role);
+    const hasRole = Array.isArray(role)
+      ? role.some((r) => allowedRoles.includes(r))
+      : !!role && allowedRoles.includes(role);
     if (!hasRole) {
       // unauthorized — redirect to dashboard or show a 403 page
       return <Navigate to="/dashboard" replace />;

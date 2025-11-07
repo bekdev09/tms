@@ -24,7 +24,7 @@ export async function login(req: Request, res: Response) {
 export async function refreshToken(req: Request, res: Response) {
     try {
 
-        console.log('Refresh endpoint hit. Cookies:', req.cookies);
+        // console.log('Refresh endpoint hit. Cookies:', req.cookies);
         const oldToken = req.cookies.refreshToken;
         if (!oldToken) throw new UnauthorizedError("Invalid Credentials")
 
@@ -36,7 +36,8 @@ export async function refreshToken(req: Request, res: Response) {
         res.clearCookie("refreshToken");
 
         if (err instanceof Error) {
-            console.warn(`Refresh token failed: ${err.message}, IP: ${req.ip}, User-Agent: ${req.headers["user-agent"]}`);
+            // console.warn(`Refresh token failed: ${err.message}, IP: ${req.ip}, User-Agent: ${req.headers["user-agent"]}`);
+            console.warn('Refresh token failed:')
         }
         throw new UnauthorizedError("Invalid Credentials")
     }
