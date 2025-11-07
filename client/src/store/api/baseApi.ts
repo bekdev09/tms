@@ -1,62 +1,61 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { BaseQueryFn } from '@reduxjs/toolkit/query';
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { setAccessToken, clearAuth } from "../../features/auth/authSlice";
 
-const API_BASE = (import.meta.env.VITE_API_URL as string) || 'http://localhost:3000/api/v1';
+// ✅ Load API base URL from environment or fallback
+const API_BASE =
+  (import.meta.env.VITE_API_URL as string) || "http://localhost:3000/api/v1";
 
-const rawBaseQuery = fetchBaseQuery({
+// ✅ Create baseQuery with token injection
+const baseQuery = fetchBaseQuery({
   baseUrl: API_BASE,
+  credentials: "include", // send cookies (for refresh token)
   prepareHeaders: (headers, { getState }) => {
-    try {
-      const state: any = getState();
-      const token = state?.auth?.accessToken ?? null;
-      if (token) headers.set('Authorization', `Bearer ${token}`);
-    } catch {
-      // noop
+    const token = (getState() as any)?.auth?.accessToken;
+    if (token) {
+      headers.set("authorization", `Bearer ${token}`);
     }
     return headers;
   },
-  credentials: 'include', // ensure refresh cookie is sent
 });
 
-const baseQueryWithReauth: BaseQueryFn<string | any, unknown, unknown> = async (args, api, extraOptions) => {
-  // first try
-  let result = await rawBaseQuery(args, api, extraOptions);
+// ✅ Wrap baseQuery to handle automatic token refresh
+const baseQueryWithReauth: typeof baseQuery = async (args, api, extraOptions) => {
+  // First attempt
+  let result = await baseQuery(args, api, extraOptions);
 
-  // if we get 401, try refresh and then retry original
-  // @ts-ignore - result.error may be typed differently
-  if (result.error && (result.error as any).status === 401) {
-    try {
-      const refreshResult = await rawBaseQuery({ url: '/auth/refresh', method: 'POST' }, api, extraOptions);
-      if (refreshResult.data && (refreshResult.data as any).accessToken) {
-        const newAccess = (refreshResult.data as any).accessToken;
-        try {
-          // update redux in-memory token
-          api.dispatch({ type: 'auth/setAccessToken', payload: newAccess });
-        } catch { }
-        // retry original
-        result = await rawBaseQuery(args, api, extraOptions);
-      } else {
-        try {
-          api.dispatch({ type: 'auth/setAccessToken', payload: null });
-        } catch { }
-      }
-    } catch (e) {
-      try {
-        api.dispatch({ type: 'auth/setAccessToken', payload: null });
-      } catch { }
+  // If we got 401 Unauthorized → try refreshing the token
+  if (result?.error && (result.error as any).status === 401) {
+    console.warn("baseQueryWithReauth: Access token expired, attempting refresh...");
+
+    // Attempt refresh
+    const refreshResult = await baseQuery(
+      { url: "/auth/refresh", method: "POST" },
+      api,
+      extraOptions
+    );
+
+    if (refreshResult?.data) {
+      // ✅ Store the new access token
+      api.dispatch(setAccessToken({ ...(refreshResult.data as any) }));
+
+      // Retry the original query with the new token
+      result = await baseQuery(args, api, extraOptions);
+    } else {
+      // ❌ Refresh failed → log out
+      console.warn("baseQueryWithReauth: Refresh failed, logging out user.");
+      api.dispatch(clearAuth());
     }
   }
 
   return result;
 };
 
+// ✅ Define base API slice for modular endpoints
 export const baseApiSlice = createApi({
-  reducerPath: 'baseApi',
+  reducerPath: "baseApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Auth', 'User', 'DataSubmissions'],
-  endpoints: () => ({
-    // defined in other files
-  }),
+  tagTypes: ["Auth", "User", "Data"],
+  endpoints: () => ({}), // extended in feature slices
 });
 
 export default baseApiSlice;

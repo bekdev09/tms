@@ -60,5 +60,5 @@ export const authApiSlice = baseApiSlice.injectEndpoints({
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useRefreshMutation, useLogoutMutation, useUploadFileMutation } = authApiSlice;
+export const { useLoginMutation, useRegisterMutation, useRefreshMutation, useLogoutMutation, useGetMeQuery, useLazyGetMeQuery, useUploadFileMutation } = authApiSlice;
 export default authApiSlice;

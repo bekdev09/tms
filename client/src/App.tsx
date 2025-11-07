@@ -5,7 +5,7 @@ import { store } from './store/store';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { setTheme } from './store/slices/themeSlice';
 import AuthProvider from './app/AuthProvider';
-import PersistLogin from './components/PersistLogin';
+import PersistLogin from './features/auth/PersistLogin';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
