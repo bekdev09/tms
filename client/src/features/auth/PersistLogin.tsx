@@ -4,11 +4,12 @@ import { Outlet, Link } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import { useRefreshMutation, useLazyGetMeQuery } from "./authApi";
 import { setUser, setLoading } from "./authSlice";
+import usePersist from "../../hooks/usePersist";
 
 export default function PersistLogin(): JSX.Element {
   const token = useAppSelector((s) => s.auth.accessToken);
   const user = useAppSelector((s) => s.auth.user);
-  const persist: boolean = true;
+  const [persist] = usePersist();
 
   const [refresh, { isLoading, isError, error }] = useRefreshMutation();
   const [triggerGetMe] = useLazyGetMeQuery();
@@ -20,9 +21,8 @@ export default function PersistLogin(): JSX.Element {
 
     const verify = async () => {
       try {
-        console.debug("PersistLogin: start verify", { token, user, persist });
+        // console.debug("PersistLogin: start verify", { token, user, persist });
 
-        // ✅ FIX: If we already have BOTH token AND user, we're fully authenticated
         if (token && user) {
           console.debug("PersistLogin: already authenticated — skipping");
           dispatch(setLoading(false));
@@ -30,7 +30,7 @@ export default function PersistLogin(): JSX.Element {
           return;
         }
 
-        // ✅ FIX: If we have token but no user, just fetch user data
+        // we have token but no user, just fetch user data
         if (token && !user) {
           console.debug(
             "PersistLogin: token exists but no user — fetching /auth/me"
@@ -51,7 +51,7 @@ export default function PersistLogin(): JSX.Element {
           return;
         }
 
-        // ✅ FIX: Only refresh if we have NO token but persistence is on
+        // Only refresh if we have NO token but persistence is on
         if (!token && persist) {
           console.debug("PersistLogin: no token — attempting refresh");
           const res = await refresh().unwrap();
@@ -85,7 +85,7 @@ export default function PersistLogin(): JSX.Element {
     };
   }, [token, user, persist, refresh, triggerGetMe, dispatch]);
 
-  // 🌀 Loading state
+  // Loading state
   if (isLoading || verifying) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -97,7 +97,7 @@ export default function PersistLogin(): JSX.Element {
     );
   }
 
-  // ⚠️ Refresh failed
+  // Refresh failed
   if (isError) {
     const msg =
       (error as any)?.data?.message ||
@@ -120,6 +120,6 @@ export default function PersistLogin(): JSX.Element {
     );
   }
 
-  // ✅ Auth ready
+  // Auth ready
   return <Outlet />;
 }

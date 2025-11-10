@@ -1,23 +1,25 @@
-import { useState } from 'react';
-import { useLoginMutation } from '../features/auth/authApi';
-import { useAppDispatch } from '../store/hooks';
-import { setAccessToken, setUser } from '../features/auth/authSlice';
-import { Link, useNavigate } from 'react-router-dom';
-import { LogIn } from 'lucide-react';
+import { useState } from "react";
+import { useLoginMutation } from "../features/auth/authApi";
+import { useAppDispatch } from "../store/hooks";
+import { setAccessToken, setUser } from "../features/auth/authSlice";
+import { Link, useNavigate } from "react-router-dom";
+import { LogIn } from "lucide-react";
+import usePersist from "../hooks/usePersist";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [login] = useLoginMutation();
+  const [persist, setPersist] = usePersist();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       const data = await login({ email, password }).unwrap();
@@ -28,9 +30,9 @@ export default function Login() {
       if (data?.user) {
         dispatch(setUser(data.user));
       }
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (err: any) {
-      setError(err.message || 'Failed to login');
+      setError(err.message || "Failed to login");
     } finally {
       setLoading(false);
     }
@@ -87,19 +89,55 @@ export default function Login() {
                 required
               />
             </div>
-
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="persist"
+                className="flex items-center cursor-pointer select-none"
+              >
+                <div className="relative">
+                  <input
+                    id="persist"
+                    type="checkbox"
+                    checked={persist}
+                    onChange={() => setPersist(!persist)}
+                    className="sr-only"
+                  />
+                  <div
+                    className={`w-11 h-6 rounded-full transition-colors ${
+                      persist
+                        ? "bg-gradient-to-r from-blue-500 to-cyan-500"
+                        : "bg-slate-300 dark:bg-slate-600"
+                    }`}
+                  ></div>
+                  <div
+                    className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                      persist ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  ></div>
+                </div>
+                <span className="ml-3 text-sm text-slate-700 dark:text-slate-300">
+                  Remember me
+                </span>
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-sm text-blue-600 dark:text-cyan-400 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <button
               type="submit"
               disabled={loading}
               className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-slate-600 dark:text-slate-400">
-              Don't have an account?{' '}
+              Don't have an account?{" "}
               <Link
                 to="/register"
                 className="text-blue-600 dark:text-cyan-400 font-semibold hover:underline"
