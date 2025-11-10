@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { setAccessToken, clearAuth } from "../../features/auth/authSlice";
 
 // ✅ Load API base URL from environment or fallback
+// In development we proxy /api -> server, so prefer a relative path when VITE_API_URL is not set.
 const API_BASE =
   (import.meta.env.VITE_API_URL as string) || "http://localhost:3000/api/v1";
 
@@ -28,6 +29,7 @@ const baseQueryWithReauth: typeof baseQuery = async (args, api, extraOptions) =>
     console.warn("baseQueryWithReauth: Access token expired, attempting refresh...");
 
     // Attempt refresh
+    console.debug('baseQueryWithReauth: calling /auth/refresh');
     const refreshResult = await baseQuery(
       { url: "/auth/refresh", method: "POST" },
       api,
@@ -35,8 +37,10 @@ const baseQueryWithReauth: typeof baseQuery = async (args, api, extraOptions) =>
     );
 
     if (refreshResult?.data) {
-      // ✅ Store the new access token
-      api.dispatch(setAccessToken({ ...(refreshResult.data as any) }));
+      console.debug('baseQueryWithReauth: refresh returned', refreshResult.data);
+      // ✅ Store the new access token (refreshResult.data should contain accessToken)
+      const newToken = (refreshResult.data as any)?.accessToken ?? null;
+      api.dispatch(setAccessToken(newToken));
 
       // Retry the original query with the new token
       result = await baseQuery(args, api, extraOptions);

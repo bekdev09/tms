@@ -29,12 +29,11 @@ function AppContent() {
 
   return (
     <BrowserRouter>
-      <PersistLogin>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route element={<PersistLogin />}>
             <Route
               path="/dashboard"
               element={
@@ -53,10 +52,10 @@ function AppContent() {
                 }
               />
             </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </PersistLogin>
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

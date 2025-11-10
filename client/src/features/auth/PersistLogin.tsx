@@ -1,49 +1,92 @@
 // src/features/auth/PersistLogin.tsx
 import { useEffect, useState } from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
-import { useAppSelector } from "../../store/hooks";
-// import { selectCurrentToken } from "./authSlice";
-import { useRefreshMutation } from "./authApi"; // should call POST /auth/refresh
-// import usePersist from "../../hooks/usePersist";
+import { Outlet, Link } from "react-router-dom";
+import { useAppSelector, useAppDispatch } from "../../store/hooks";
+import { useRefreshMutation, useLazyGetMeQuery } from "./authApi";
+import { setUser, setLoading } from "./authSlice";
 
-interface Props {
-  children: React.ReactNode;
-}
-export default function PersistLogin({ children }: Props): JSX.Element {
-  // const token = useAppSelector(selectCurrentToken);
+export default function PersistLogin(): JSX.Element {
   const token = useAppSelector((s) => s.auth.accessToken);
-  // const [persist] = usePersist();
+  const user = useAppSelector((s) => s.auth.user);
   const persist: boolean = true;
-  const location = useLocation();
 
-  const [refresh, { isLoading, isError, error, isSuccess }] =
-    useRefreshMutation();
-  const [checked, setChecked] = useState(false);
+  const [refresh, { isLoading, isError, error }] = useRefreshMutation();
+  const [triggerGetMe] = useLazyGetMeQuery();
+  const [verifying, setVerifying] = useState(true);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     let ignore = false;
 
     const verify = async () => {
       try {
-        // if we have no token but persistence is on, try refresh once
-        if (!token && persist && location.pathname !== "/login") {
-          await refresh().unwrap();
+        console.debug("PersistLogin: start verify", { token, user, persist });
+
+        // ✅ FIX: If we already have BOTH token AND user, we're fully authenticated
+        if (token && user) {
+          console.debug("PersistLogin: already authenticated — skipping");
+          dispatch(setLoading(false));
+          setVerifying(false);
+          return;
+        }
+
+        // ✅ FIX: If we have token but no user, just fetch user data
+        if (token && !user) {
+          console.debug(
+            "PersistLogin: token exists but no user — fetching /auth/me"
+          );
+          try {
+            const me = await triggerGetMe().unwrap();
+            if (me && !ignore) {
+              dispatch(setUser(me.user));
+            }
+          } catch (e) {
+            console.warn("PersistLogin: getMe failed", e);
+          } finally {
+            if (!ignore) {
+              dispatch(setLoading(false));
+              setVerifying(false);
+            }
+          }
+          return;
+        }
+
+        // ✅ FIX: Only refresh if we have NO token but persistence is on
+        if (!token && persist) {
+          console.debug("PersistLogin: no token — attempting refresh");
+          const res = await refresh().unwrap();
+
+          // If refresh succeeded, fetch user data
+          if (res && !ignore) {
+            console.debug("PersistLogin: refresh success — fetching user");
+            try {
+              const me = await triggerGetMe().unwrap();
+              if (me) dispatch(setUser(me.user));
+            } catch (e) {
+              console.warn("PersistLogin: getMe failed after refresh", e);
+            }
+          }
         }
       } catch (err) {
-        console.warn("PersistLogin: refresh failed", err);
+        console.warn("PersistLogin: verify process failed", err);
       } finally {
-        if (!ignore) setChecked(true);
+        if (!ignore) {
+          console.debug("PersistLogin: verification complete");
+          dispatch(setLoading(false));
+          setVerifying(false);
+        }
       }
     };
 
     verify();
+
     return () => {
       ignore = true;
     };
-  }, [token, persist, refresh, location.pathname]);
+  }, [token, user, persist, refresh, triggerGetMe, dispatch]);
 
-  // 🌀 While checking refresh or token
-  if (isLoading || !checked) {
+  // 🌀 Loading state
+  if (isLoading || verifying) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -77,7 +120,6 @@ export default function PersistLogin({ children }: Props): JSX.Element {
     );
   }
 
-  // ✅ Auth ready or refresh succeeded
-  // return <Outlet />;
-  return <>{children}</>;
+  // ✅ Auth ready
+  return <Outlet />;
 }

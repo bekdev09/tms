@@ -1,4 +1,5 @@
 import { baseApiSlice } from '../../store/api/baseApi';
+import { clearAuth, setAccessToken } from './authSlice';
 
 export const authApiSlice = baseApiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,10 +9,11 @@ export const authApiSlice = baseApiSlice.injectEndpoints({
         try {
           const { data } = await queryFulfilled;
           if (data?.accessToken) {
-            dispatch({ type: 'auth/setAccessToken', payload: data.accessToken });
+            dispatch(setAccessToken(data.accessToken));
           }
-        } catch {
+        } catch(error) {
           // noop
+          console.error("Login error:", error);
         }
       },
     }),
@@ -24,10 +26,10 @@ export const authApiSlice = baseApiSlice.injectEndpoints({
         try {
           const { data } = await queryFulfilled;
           if (data?.accessToken) {
-            dispatch({ type: 'auth/setAccessToken', payload: data.accessToken });
+            dispatch(setAccessToken(data.accessToken));
           }
         } catch {
-          dispatch({ type: 'auth/clearAuth' });
+           dispatch(clearAuth());
         }
       },
     }),
@@ -43,7 +45,7 @@ export const authApiSlice = baseApiSlice.injectEndpoints({
         } catch {
           // ignore
         } finally {
-          dispatch({ type: 'auth/clearAuth' });
+         dispatch(clearAuth());
         }
       },
     }),

@@ -12,7 +12,6 @@ export default function ProtectedRoute({
   allowedRoles,
 }: ProtectedRouteProps) {
   const { user, loading } = useAppSelector((state) => state.auth);
-  // console.log('ProtectedRoute render, user:', user, 'loading:', loading, 'allowedRoles:', allowedRoles);
 
   if (loading) {
     return (
@@ -34,6 +33,8 @@ export default function ProtectedRoute({
     const role = (user && (user.role || user?.roles || user?.roleName)) as
       | string
       | undefined;
+    // console.log("user role:", user.id);
+
     // support user.role being string or array
     const hasRole = Array.isArray(role)
       ? role.some((r) => allowedRoles.includes(r))
