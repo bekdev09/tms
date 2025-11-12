@@ -1,88 +1,123 @@
 import bcrypt from "bcryptjs";
 import * as authDao from "./auth.dao.ts";
 import { RegisterInput } from "./auth.schemas.ts";
-import { LoginResponse, loginResponseDtoSchema, RefreshResponse, refreshResponseDtoSchema, UserDto } from "./auth.dto.ts";
-import { createJWT, issueRefreshToken, revokeAllRefreshTokensForUser, revokeRefreshToken, revokeTokensByDevice, verifyRefreshToken } from "../../utils/tokens.ts";
+import {
+  LoginResponse,
+  loginResponseDtoSchema,
+  RefreshResponse,
+  refreshResponseDtoSchema,
+  UserDto,
+} from "./auth.dto.ts";
+import {
+  createJWT,
+  issueRefreshToken,
+  revokeAllRefreshTokensForUser,
+  revokeRefreshToken,
+  revokeTokensByDevice,
+  verifyRefreshToken,
+} from "../../utils/tokens.ts";
 import { InternalServerError } from "../../errors/internal-server.ts";
 import { UnauthorizedError } from "../../errors/unauthorized.ts";
 import { NotFoundError } from "../../errors/not-found.ts";
 import { UnauthenticatedError } from "../../errors/unauthenticated.ts";
+import ms, { StringValue } from "ms";
+import { env } from "../../configs/env.ts";
 
 export async function register(data: RegisterInput) {
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-    const createdUser = authDao.createUser({ ...data, password: hashedPassword });
-    return createdUser;
+  const hashedPassword = await bcrypt.hash(data.password, 10);
+  const createdUser = authDao.createUser({ ...data, password: hashedPassword });
+  return createdUser;
 }
 
-export async function login(email: string, password: string): Promise<LoginResponse> {
-    const user = await authDao.findUserByEmail(email);
-    
-    if (!user) throw new NotFoundError("Invalid credentials");
+export async function login(
+  username: string,
+  password: string
+): Promise<LoginResponse> {
+  const user = await authDao.findUserByUsername(username);
 
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) throw new UnauthenticatedError("Invalid credentials");
-    const userDto: UserDto = {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-    }
+  if (!user) throw new NotFoundError("Invalid credentials");
 
-    const accessToken = createJWT({ payload: { id: user.id, role: user.role } })
+  const isValid = await bcrypt.compare(password, user.password);
+  if (!isValid) throw new UnauthenticatedError("Invalid credentials");
+  const userDto: UserDto = {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+  };
 
-    const absoluteExpiry: Date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);;
+  const accessToken = createJWT({ payload: { id: user.id, role: user.role } });
 
-    // //revoke refresh tokens by device
-    // const ip = req.ip;
-    // const userAgent = req.headers["user-agent"] ?? null;
-    // await revokeTokensByDevice(user.id, ip, userAgent);
+  const lifetime = env.JWT_REFRESHTOKEN_LIFETIME || "1h";
+  const absoluteExpiry = new Date(Date.now() + ms(lifetime as StringValue));
 
-    // //revoke refresh token by user
-    await revokeAllRefreshTokensForUser(user.id);
-    // issue new refresh token on log in
-    const refreshToken = await issueRefreshToken(user.id, absoluteExpiry)
+  // //revoke refresh tokens by device
+  // const ip = req.ip;
+  // const userAgent = req.headers["user-agent"] ?? null;
+  // await revokeTokensByDevice(user.id, ip, userAgent);
 
-    const result = loginResponseDtoSchema.safeParse({ user: userDto, accessToken, refreshToken })
-    if (!result.success) {
-        throw new InternalServerError("Invalid response format")
-    }
+  // //revoke refresh token by user
+  await revokeAllRefreshTokensForUser(user.id);
+  // issue new refresh token on log in
+  const refreshToken = await issueRefreshToken(user.id, absoluteExpiry);
 
-    return result.data;
+  const result = loginResponseDtoSchema.safeParse({
+    user: userDto,
+    accessToken,
+    refreshToken,
+  });
+  if (!result.success) {
+    throw new InternalServerError("Invalid response format");
+  }
+
+  return result.data;
 }
 
-export async function rotateRefreshToken(oldToken: string, ip?: string, userAgent?: string): Promise<RefreshResponse> {
-    const record = await verifyRefreshToken(oldToken);
-    if (!record) {
-        throw new UnauthorizedError("Invalid Credentials")
-    }
+export async function rotateRefreshToken(
+  oldToken: string,
+  ip?: string,
+  userAgent?: string
+): Promise<RefreshResponse> {
+  const record = await verifyRefreshToken(oldToken);
+  if (!record) {
+    throw new UnauthorizedError("Invalid Credentials");
+  }
 
-    const findUserAttachedToToken = await authDao.findUserById(record.userId)
-    if (!findUserAttachedToToken) throw new UnauthorizedError("Invalid Credentials")
+  const findUserAttachedToToken = await authDao.findUserById(record.userId);
+  if (!findUserAttachedToToken)
+    throw new UnauthorizedError("Invalid Credentials");
 
-    const accessToken = createJWT({ payload: { id: findUserAttachedToToken.id, role: findUserAttachedToToken.role } })
+  const accessToken = createJWT({
+    payload: {
+      id: findUserAttachedToToken.id,
+      role: findUserAttachedToToken.role,
+    },
+  });
 
-    await revokeRefreshToken(record.id);
-    // // Revoke old token only (rotation)
-    // const userId = record.userId;
-    // await revokeTokensByDevice(userId, ip, userAgent);
+  await revokeRefreshToken(record.id);
+  // // Revoke old token only (rotation)
+  // const userId = record.userId;
+  // await revokeTokensByDevice(userId, ip, userAgent);
 
-    const idleExpiryMs = 1000 * 60 * 60 * 24;
-    const absoluteExpiry = record.absoluteExpiry;
+  const idleExpiryMs = 1000 * 60 * 60 * 24;
+  const absoluteExpiry = record.absoluteExpiry;
 
-    const newRefreshToken = await issueRefreshToken(
-        record.userId,
-        absoluteExpiry,
-        ip,
-        userAgent,
-        idleExpiryMs
-    );
+  const newRefreshToken = await issueRefreshToken(
+    record.userId,
+    absoluteExpiry,
+    ip,
+    userAgent,
+    idleExpiryMs
+  );
 
-    const result = refreshResponseDtoSchema.safeParse({ accessToken, refreshToken: newRefreshToken })
+  const result = refreshResponseDtoSchema.safeParse({
+    accessToken,
+    refreshToken: newRefreshToken,
+  });
 
-    if (!result.success) {
-        throw new InternalServerError("Invalid response format")
-    }
+  if (!result.success) {
+    throw new InternalServerError("Invalid response format");
+  }
 
-    return result.data
+  return result.data;
 }
-

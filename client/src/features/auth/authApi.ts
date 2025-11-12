@@ -3,7 +3,7 @@ import { clearAuth, setAccessToken } from './authSlice';
 
 export const authApiSlice = baseApiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    login: builder.mutation<any, { email: string; password: string }>({
+    login: builder.mutation<any, { username: string; password: string }>({
       query: (creds) => ({ url: '/auth/login', method: 'POST', body: creds }),
       async onQueryStarted(_arg, { queryFulfilled, dispatch }) {
         try {

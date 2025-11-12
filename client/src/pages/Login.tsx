@@ -7,7 +7,7 @@ import { LogIn } from "lucide-react";
 import usePersist from "../hooks/usePersist";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -22,7 +22,7 @@ export default function Login() {
     setError("");
 
     try {
-      const data = await login({ email, password }).unwrap();
+      const data = await login({ username, password }).unwrap();
       // server returns { user, accessToken } and sets refresh cookie
       if (data?.accessToken) {
         dispatch(setAccessToken(data.accessToken));
@@ -64,12 +64,12 @@ export default function Login() {
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Email Address
+                Username
               </label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
                 placeholder="you@example.com"
                 required

@@ -15,8 +15,6 @@ import { BadRequestError } from "../../errors/bad-request.ts";
 import { UnauthenticatedError } from "../../errors/unauthenticated.ts";
 import { UnauthorizedError } from "../../errors/unauthorized.ts";
 import { InternalServerError } from "../../errors/internal-server.ts";
-import { de } from "zod/locales";
-
 
 const router = Router();
 
