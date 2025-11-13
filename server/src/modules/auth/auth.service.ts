@@ -121,3 +121,19 @@ export async function rotateRefreshToken(
 
   return result.data;
 }
+
+export async function changePassword(
+  userId: string,
+  oldPassword: string,
+  newPassword: string
+) {
+  const user = await authDao.findUserById(userId);
+  if (!user) throw new NotFoundError("User not found");
+  const isValid = await bcrypt.compare(oldPassword, user.password);
+  if (!isValid) throw new UnauthenticatedError("Old password is incorrect");
+  const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+  await authDao.updateUserPassword(userId, hashedNewPassword);
+  // Revoke all refresh tokens after password change
+  await revokeAllRefreshTokensForUser(userId);
+  return;
+}
