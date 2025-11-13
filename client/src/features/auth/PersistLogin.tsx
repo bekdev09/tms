@@ -24,7 +24,7 @@ export default function PersistLogin(): JSX.Element {
         // console.debug("PersistLogin: start verify", { token, user, persist });
 
         if (token && user) {
-          console.debug("PersistLogin: already authenticated — skipping");
+          // console.debug("PersistLogin: already authenticated — skipping");
           dispatch(setLoading(false));
           setVerifying(false);
           return;
@@ -32,16 +32,16 @@ export default function PersistLogin(): JSX.Element {
 
         // we have token but no user, just fetch user data
         if (token && !user) {
-          console.debug(
-            "PersistLogin: token exists but no user — fetching /auth/me"
-          );
+          // console.debug(
+          //   "PersistLogin: token exists but no user — fetching /auth/me"
+          // );
           try {
             const me = await triggerGetMe().unwrap();
             if (me && !ignore) {
               dispatch(setUser(me.user));
             }
           } catch (e) {
-            console.warn("PersistLogin: getMe failed", e);
+            // console.warn("PersistLogin: getMe failed", e);
           } finally {
             if (!ignore) {
               dispatch(setLoading(false));
@@ -53,25 +53,25 @@ export default function PersistLogin(): JSX.Element {
 
         // Only refresh if we have NO token but persistence is on
         if (!token && persist) {
-          console.debug("PersistLogin: no token — attempting refresh");
+          // console.debug("PersistLogin: no token — attempting refresh");
           const res = await refresh().unwrap();
 
           // If refresh succeeded, fetch user data
           if (res && !ignore) {
-            console.debug("PersistLogin: refresh success — fetching user");
+            // console.debug("PersistLogin: refresh success — fetching user");
             try {
               const me = await triggerGetMe().unwrap();
               if (me) dispatch(setUser(me.user));
             } catch (e) {
-              console.warn("PersistLogin: getMe failed after refresh", e);
+              // console.warn("PersistLogin: getMe failed after refresh", e);
             }
           }
         }
       } catch (err) {
-        console.warn("PersistLogin: verify process failed", err);
+        // console.warn("PersistLogin: verify process failed", err);
       } finally {
         if (!ignore) {
-          console.debug("PersistLogin: verification complete");
+          // console.debug("PersistLogin: verification complete");
           dispatch(setLoading(false));
           setVerifying(false);
         }

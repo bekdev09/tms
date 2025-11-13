@@ -1,27 +1,33 @@
-import { baseApiSlice } from '../../store/api/baseApi';
-import { clearAuth, setAccessToken } from './authSlice';
+import { baseApiSlice } from "../../store/api/baseApi";
+import { clearAuth, setAccessToken } from "./authSlice";
 
 export const authApiSlice = baseApiSlice.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<any, { username: string; password: string }>({
-      query: (creds) => ({ url: '/auth/login', method: 'POST', body: creds }),
+      query: (creds) => ({ url: "/auth/login", method: "POST", body: creds }),
+      invalidatesTags: ["Auth"],
       async onQueryStarted(_arg, { queryFulfilled, dispatch }) {
         try {
           const { data } = await queryFulfilled;
           if (data?.accessToken) {
             dispatch(setAccessToken(data.accessToken));
           }
-        } catch(error) {
+        } catch (error) {
           // noop
           console.error("Login error:", error);
         }
       },
     }),
     register: builder.mutation<any, { email: string; password: string }>({
-      query: (creds) => ({ url: '/auth/register', method: 'POST', body: creds }),
+      query: (creds) => ({
+        url: "/auth/register",
+        method: "POST",
+        body: creds,
+      }),
     }),
     refresh: builder.mutation<any, void>({
-      query: () => ({ url: '/auth/refresh', method: 'POST' }),
+      query: () => ({ url: "/auth/refresh", method: "POST" }),
+      invalidatesTags: ["Auth"],
       async onQueryStarted(_arg, { queryFulfilled, dispatch }) {
         try {
           const { data } = await queryFulfilled;
@@ -29,29 +35,30 @@ export const authApiSlice = baseApiSlice.injectEndpoints({
             dispatch(setAccessToken(data.accessToken));
           }
         } catch {
-           dispatch(clearAuth());
+          dispatch(clearAuth());
         }
       },
     }),
     getMe: builder.query<any, void>({
-      query: () => ({ url: '/auth/me', method: 'GET' }),
-      providesTags: ['Auth'],
+      query: () => ({ url: "/auth/me", method: "GET" }),
+      providesTags: ["Auth"],
     }),
     logout: builder.mutation<any, void>({
-      query: () => ({ url: '/auth/logout', method: 'POST' }),
+      query: () => ({ url: "/auth/logout", method: "POST" }),
+      invalidatesTags: ["Auth"],
       async onQueryStarted(_args, { queryFulfilled, dispatch }) {
         try {
           await queryFulfilled;
         } catch {
           // ignore
         } finally {
-         dispatch(clearAuth());
+          dispatch(clearAuth());
         }
       },
     }),
     uploadFile: builder.mutation<
-      any,                  // ✅ Response type
-      FormData              // ✅ Request body type
+      any, // ✅ Response type
+      FormData // ✅ Request body type
     >({
       query: (formData) => ({
         url: "auth/process-file",
@@ -62,5 +69,13 @@ export const authApiSlice = baseApiSlice.injectEndpoints({
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useRefreshMutation, useLogoutMutation, useGetMeQuery, useLazyGetMeQuery, useUploadFileMutation } = authApiSlice;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useRefreshMutation,
+  useLogoutMutation,
+  useGetMeQuery,
+  useLazyGetMeQuery,
+  useUploadFileMutation,
+} = authApiSlice;
 export default authApiSlice;
