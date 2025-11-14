@@ -3,18 +3,8 @@ import * as authController from "./auth.controller.ts";
 import { loginSchema, registerSchema } from "./auth.schemas.ts";
 import { validate } from "../../middlewares/validateRequest.ts";
 import { authenticate } from "../../middlewares/auth.middleware.ts";
-import { jobManager } from "../../jobs/jobManager.ts";
-import { cleanupExpiredTokens } from "../../jobs/cleanupRefreshToken.ts";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
-import pLimit from "p-limit";
-import axios from "axios";
-import xlsx from "xlsx";
-import { BadRequestError } from "../../errors/bad-request.ts";
-import { UnauthenticatedError } from "../../errors/unauthenticated.ts";
-import { UnauthorizedError } from "../../errors/unauthorized.ts";
-import { InternalServerError } from "../../errors/internal-server.ts";
+// import pLimit from "p-limit";
 
 const router = Router();
 
@@ -38,12 +28,12 @@ router.post("/logout", authController.logout);
 
 // File processing endpoint
 const upload = multer({ dest: "uploads/" });
-const limit = pLimit(10);
+// const limit = pLimit(10);
 router.post(
   "/process-file",
   authenticate(),
   upload.single("file"),
-  async (req, res) => {
+  async (_req, res) => {
     res.json({ message: "File processed successfully" });
   }
 );
@@ -52,15 +42,7 @@ router.post(
 router.post(
   "/jobs/cleanupTokens/restart",
   authenticate(["ADMIN", "MANAGER"]),
-  (req, res) => {
-    const { schedule } = req.body; // e.g., "0 3 * * *"
-    jobManager.restartJob("cleanupTokens", {
-      schedule,
-      task: cleanupExpiredTokens,
-    });
-
-    res.json({ message: `Cleanup job restarted with schedule: ${schedule}` });
-  }
+  authController.cleanupTokens
 );
 
 export default router;

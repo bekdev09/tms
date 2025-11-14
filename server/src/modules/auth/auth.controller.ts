@@ -7,6 +7,8 @@ import {
   revokeAllRefreshTokensForUser,
 } from "../../utils/tokens.ts";
 import { UnauthorizedError } from "../../errors/unauthorized.ts";
+import { jobManager } from "../../jobs/jobManager.ts";
+import { cleanupExpiredTokens } from "../../jobs/cleanupRefreshToken.ts";
 
 export async function register(req: Request, res: Response) {
   const user = await authService.register(req.body);
@@ -87,4 +89,21 @@ export async function changePassword(req: Request, res: Response) {
 
   await authService.changePassword(userId, oldPassword, newPassword);
   res.status(StatusCodes.OK).json({ message: "Password changed successfully" });
+}
+
+export async function cleanupTokens(req: Request, res: Response) {
+  try {
+    const { schedule } = req.body; // e.g., "0 3 * * *"
+    jobManager.restartJob("cleanupTokens", {
+      schedule,
+      task: cleanupExpiredTokens,
+    });
+
+    res.json({ message: `Cleanup job restarted with schedule: ${schedule}` });
+  } catch (error) {
+    console.error("Error cleaning up expired tokens:", error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: "Failed to clean up expired tokens" });
+  }
 }
