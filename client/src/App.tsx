@@ -32,6 +32,14 @@ function AppContent() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route
+            path="register"
+            element={
+              // <ProtectedRoute allowedRoles={["ADMIN", "MANAGER"]}>
+              <Register />
+              // </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route element={<PersistLogin />}>
             <Route
@@ -43,14 +51,6 @@ function AppContent() {
               }
             >
               <Route index element={<DashboardHome />} />
-              <Route
-                path="register"
-                element={
-                  <ProtectedRoute allowedRoles={["ADMIN", "MANAGER"]}>
-                    <Register />
-                  </ProtectedRoute>
-                }
-              />
             </Route>
           </Route>
           <Route path="*" element={<NotFound />} />
