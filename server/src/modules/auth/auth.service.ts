@@ -137,3 +137,16 @@ export async function changePassword(
   await revokeAllRefreshTokensForUser(userId);
   return;
 }
+
+export async function getUserById(userId: string) {
+  const user = await authDao.findUserById(userId);
+  if (!user) throw new NotFoundError("User not found");
+  const userMe: UserDto = {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+  };
+
+  return userMe;
+}

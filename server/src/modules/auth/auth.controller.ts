@@ -79,7 +79,9 @@ export async function logout(req: Request, res: Response) {
 }
 
 export async function getMe(req: Request, res: Response) {
-  res.status(StatusCodes.OK).json({ user: req.user });
+  if (!req.user) throw new UnauthorizedError("User not authenticated");
+  const user = await authService.getUserById(req.user.id);
+  res.status(StatusCodes.OK).json({ user });
 }
 
 export async function changePassword(req: Request, res: Response) {

@@ -18,13 +18,12 @@ router.post(
 router.post("/login", validate(loginSchema), authController.login);
 router.post("/refresh", authController.refreshToken);
 // expose logout endpoint so client can revoke refresh token cookie and server-side token
-router.post("/logout", authController.logout);
 // router.post("/forgot-password", authController.forgotPassword);
 // router.post("/reset-password", authController.resetPassword);
 
 // Authenticated
-// router.post("/logout", /* authenticate(), */ authController.logout);
-// router.post("/change-password", /* authenticate(), */ authController.changePassword);
+router.post("/logout", authenticate(), authController.logout);
+router.post("/change-password", authenticate(), authController.changePassword);
 
 // File processing endpoint
 const upload = multer({ dest: "uploads/" });
