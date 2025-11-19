@@ -17,7 +17,6 @@ import {
   verifyRefreshToken,
 } from "../../utils/tokens.ts";
 import { InternalServerError } from "../../errors/internal-server.ts";
-import { UnauthorizedError } from "../../errors/unauthorized.ts";
 import { NotFoundError } from "../../errors/not-found.ts";
 import { UnauthenticatedError } from "../../errors/unauthenticated.ts";
 import ms, { StringValue } from "ms";
@@ -80,12 +79,12 @@ export async function rotateRefreshToken(
 ): Promise<RefreshResponse> {
   const record = await verifyRefreshToken(oldToken);
   if (!record) {
-    throw new UnauthorizedError("Invalid Credentials");
+    throw new UnauthenticatedError("Invalid Credentials");
   }
 
   const findUserAttachedToToken = await authDao.findUserById(record.userId);
   if (!findUserAttachedToToken)
-    throw new UnauthorizedError("Invalid Credentials");
+    throw new UnauthenticatedError("Invalid Credentials");
 
   const accessToken = createJWT({
     payload: {

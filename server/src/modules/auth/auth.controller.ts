@@ -6,9 +6,9 @@ import {
   revokeRefreshToken,
   revokeAllRefreshTokensForUser,
 } from "../../utils/tokens.ts";
-import { UnauthorizedError } from "../../errors/unauthorized.ts";
 import { jobManager } from "../../jobs/jobManager.ts";
 import { cleanupExpiredTokens } from "../../jobs/cleanupRefreshToken.ts";
+import { UnauthenticatedError } from "../../errors/unauthenticated.ts";
 
 export async function register(req: Request, res: Response) {
   const user = await authService.register(req.body);
@@ -26,7 +26,7 @@ export async function login(req: Request, res: Response) {
     res.status(StatusCodes.OK).json({ user, accessToken });
   } catch (error) {
     res.clearCookie("refreshToken");
-    throw new UnauthorizedError("Invalid Credentials");
+    throw new UnauthenticatedError("Invalid Credentials");
   }
 }
 
@@ -34,7 +34,7 @@ export async function refreshToken(req: Request, res: Response) {
   try {
     // console.log('Refresh endpoint hit. Cookies:', req.cookies);
     const oldToken = req.cookies.refreshToken;
-    if (!oldToken) throw new UnauthorizedError("Invalid Credentials");
+    if (!oldToken) throw new UnauthenticatedError("Invalid Credentials");
 
     const { accessToken, refreshToken } = await authService.rotateRefreshToken(
       oldToken
@@ -49,7 +49,7 @@ export async function refreshToken(req: Request, res: Response) {
       // console.warn(`Refresh token failed: ${err.message}, IP: ${req.ip}, User-Agent: ${req.headers["user-agent"]}`);
       console.warn("Refresh token failed:");
     }
-    throw new UnauthorizedError("Invalid Credentials");
+    throw new UnauthenticatedError("Invalid Credentials");
   }
 }
 
@@ -79,7 +79,7 @@ export async function logout(req: Request, res: Response) {
 }
 
 export async function getMe(req: Request, res: Response) {
-  if (!req.user) throw new UnauthorizedError("User not authenticated");
+  if (!req.user) throw new UnauthenticatedError("User not authenticated");
   const user = await authService.getUserById(req.user.id);
   res.status(StatusCodes.OK).json({ user });
 }
@@ -87,7 +87,7 @@ export async function getMe(req: Request, res: Response) {
 export async function changePassword(req: Request, res: Response) {
   const userId = req.user?.id;
   const { oldPassword, newPassword } = req.body;
-  if (!userId) throw new UnauthorizedError("User not authenticated");
+  if (!userId) throw new UnauthenticatedError("User not authenticated");
 
   await authService.changePassword(userId, oldPassword, newPassword);
   res.status(StatusCodes.OK).json({ message: "Password changed successfully" });

@@ -11,7 +11,7 @@ const router = Router();
 router.get("/me", authenticate(), authController.getMe);
 router.post(
   "/register",
-  authenticate(["ADMIN", "MANAGER"]),
+  /*authenticate(["ADMIN", "MANAGER"]),*/
   validate(registerSchema),
   authController.register
 );
