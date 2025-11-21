@@ -14,6 +14,7 @@ import DashboardHome from "./pages/DashboardHome";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import NotFound from "./pages/NotFound";
+import ChangePassword from "./pages/ChangePassword";
 
 function AppContent() {
   const dispatch = useAppDispatch();
@@ -51,6 +52,7 @@ function AppContent() {
               }
             >
               <Route index element={<DashboardHome />} />
+              <Route path="change-password" element={<ChangePassword />} />
             </Route>
           </Route>
           <Route path="*" element={<NotFound />} />
