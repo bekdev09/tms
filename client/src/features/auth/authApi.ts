@@ -1,3 +1,4 @@
+import { ApiResponse } from "../../pages/ChangePassword";
 import { baseApiSlice } from "../../store/api/baseApi";
 import { clearAuth, setAccessToken } from "./authSlice";
 
@@ -66,6 +67,14 @@ export const authApiSlice = baseApiSlice.injectEndpoints({
         body: formData,
       }),
     }),
+    changePassword: builder.mutation<ApiResponse, { currentPassword: string; newPassword: string }>({
+      query: (body) => ({
+        url: "/auth/change-password",
+        method: "POST",
+        body: {oldPassword: body.currentPassword, newPassword: body.newPassword},
+        // headers: { "Content-Type": "application/json" },
+      }),
+    }),
   }),
 });
 
@@ -76,6 +85,7 @@ export const {
   useLogoutMutation,
   useGetMeQuery,
   useLazyGetMeQuery,
+  useChangePasswordMutation,
   useUploadFileMutation,
 } = authApiSlice;
 export default authApiSlice;

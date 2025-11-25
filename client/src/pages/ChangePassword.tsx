@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Lock, Eye, EyeOff } from "lucide-react";
+import { useChangePasswordMutation } from "../features/auth/authApi";
 
-type ApiResponse = {
+export type ApiResponse = {
   ok: boolean;
   message?: string;
   errors?: Record<string, string>;
@@ -20,7 +21,7 @@ export default function ChangePassword() {
   const [message, setMessage] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
+  const [changePassword] = useChangePasswordMutation();
   // PASSWORD STRENGTH CHECKER
   const getStrength = (password: string) => {
     if (!password) return "";
@@ -97,19 +98,17 @@ export default function ChangePassword() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword, newPassword }),
+
+      await changePassword({
+        currentPassword,
+        newPassword,
       });
-
-      const data: ApiResponse = await res.json();
-
-      if (!res.ok || !data.ok) {
-        setErrors(data.errors || {});
-        setMessage(data.message || "Failed to change password");
-        return;
-      }
+  
+      // if (!res.ok || !data.ok) {
+      //   setErrors(data.errors || {});
+      //   setMessage(data.message || "Failed to change password");
+      //   return;
+      // }
 
       setMessage(null);
       setErrors({});
